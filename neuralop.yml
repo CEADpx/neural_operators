@@ -1,0 +1,20 @@
+name: neuralop
+channels:
+  - conda
+  - conda-forge
+dependencies:
+  - fenics==2019.1.0
+  - matplotlib
+  - scipy
+  - jupyter
+  - tensorflow
+  - pytorch
+  - pip
+  - pip:
+    - torch
+    - seaborn
+    - meshio
+    - pympler
+    - hippylib
+    - h5py
+    - pygmsh
