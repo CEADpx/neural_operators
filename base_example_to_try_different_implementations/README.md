@@ -5,7 +5,7 @@ The motivation for trying multiple implementation is to:
 - to see how data is used in branch and trunk network
 - needs could dictate implementation using specific libraries, so it is a good idea to see how it can be done from scratch
 
-> Jupyter notebooks are self-contained and do not depend on any other functions in this repository. You just need to install the required libraries using `neuralop.yml` file from the root directory of this repository. 
+> The notebooks in this folder are self-contained and do not depend on any other functions in this repository. You just need to install the required libraries using `neuralop.yml` file from the root directory of this repository. 
 
 # Problem and data generation
 
