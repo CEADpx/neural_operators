@@ -1,6 +1,5 @@
+# create environment `neuralop` using 
 # conda env create -f neuralop.yml
-# after creating the environment, install the following additional packages:
-# pip install -U "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 name: neuralop
 channels:
   - conda
@@ -13,6 +12,8 @@ dependencies:
   - tensorflow
   - pytorch
   - functools
+  - jax
+  - tqdm
   - pip
   - pip:
     - torch
