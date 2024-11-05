@@ -37,16 +37,16 @@ In all implementations, `epochs = 10000`, `batch_size = 100`, and `learning_rate
 Notebook [from_deeponet-fno.ipynb](from_deeponet-fno.ipynb) shows the implemntation of DeepONet from the directory [deeponet-fno/src/darcy_triangular_notch
 /deeponet](https://github.com/lu-group/deeponet-fno/tree/main/src/darcy_triangular_notch/deeponet) of [deeponet-fno](https://github.com/lu-group/deeponet-fno/tree/main) library. We made few minor changes but the core implementation is from the mentioned source. The method is based on tensorflow `tensorflow.compat.v1`.
 
-<p align="center"> <img src="./Results_first_method/loss_his.png" width="400"> </p>
+<p align="center"> <img src="./Results_implement1/loss_his.png" width="400"> </p>
 
-<p align="center"> <img src="./Results_first_method/neural_operator_prediction_comparison.png" width="800"> </p>
+<p align="center"> <img src="./Results_implement1/neural_operator_prediction_comparison.png" width="800"> </p>
 
 ## from_GideonIlung_deeponet.ipynb
 Notebook [from_GideonIlung_deeponet.ipynb](from_GideonIlung_deeponet.ipynb) implements DeepONet following [DeepONet](https://github.com/GideonIlung/DeepONet) repository. Some minor changes are introduced. This method uses `pytorch`. 
 
-<p align="center"> <img src="./Results_second_method/loss_his.png" width="400"> </p>
+<p align="center"> <img src="./Results_implement2/loss_his.png" width="400"> </p>
 
-<p align="center"> <img src="./Results_second_method/neural_operator_prediction_comparison.png" width="800"> </p>
+<p align="center"> <img src="./Results_implement2/neural_operator_prediction_comparison.png" width="800"> </p>
 
 ## improved_from_PredictiveIntelligenceLab_physics-informed.ipynb
 Notebook [improved_from_PredictiveIntelligenceLab_physics-informed.ipynb](improved_from_PredictiveIntelligenceLab_physics-informed.ipynb) implements DeepONet following [Physics-informed-DeepONets](https://github.com/PredictiveIntelligenceLab/Physics-informed-DeepONets/tree/main) library. This is based on `jax`. The original implementation is buggy and data intensive. It needs data in the form of $(N*P) \times M$ for branch input, $(N*P)\times 2$ for trunk input, and $(N*P) \times 1$ for output, where
@@ -57,6 +57,6 @@ In our case, $N = 1900$ = number of training input functions, $M = 101$ = elemen
 
 In the current implementation, we use the data as in the first two implementation, and the code is quite fast in training and memory efficient. 
 
-<p align="center"> <img src="./Results_third_method/loss_his.png" width="400"> </p>
+<p align="center"> <img src="./Results_implement3/loss_his.png" width="400"> </p>
 
-<p align="center"> <img src="./Results_third_method/neural_operator_prediction_comparison.png" width="800"> </p>
+<p align="center"> <img src="./Results_implement3/neural_operator_prediction_comparison.png" width="800"> </p>
