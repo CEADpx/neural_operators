@@ -39,14 +39,14 @@ Notebook [from_deeponet-fno.ipynb](from_deeponet-fno.ipynb) shows the implemntat
 
 <p align="center"> <img src="./Results_first_method/loss_his.png" width="400"> </p>
 
-<p align="center"> <img src="./Results_first_method/sample_error_plots.png" width="600"> </p>
+<p align="center"> <img src="./Results_first_method/neural_operator_prediction_comparison.png" width="800"> </p>
 
 ## from_GideonIlung_deeponet.ipynb
 Notebook [from_GideonIlung_deeponet.ipynb](from_GideonIlung_deeponet.ipynb) implements DeepONet following [DeepONet](https://github.com/GideonIlung/DeepONet) repository. Some minor changes are introduced. This method uses `pytorch`. 
 
 <p align="center"> <img src="./Results_second_method/loss_his.png" width="400"> </p>
 
-<p align="center"> <img src="./Results_second_method/sample_error_plots.png" width="600"> </p>
+<p align="center"> <img src="./Results_second_method/neural_operator_prediction_comparison.png" width="800"> </p>
 
 ## improved_from_PredictiveIntelligenceLab_physics-informed.ipynb
 Notebook [improved_from_PredictiveIntelligenceLab_physics-informed.ipynb](improved_from_PredictiveIntelligenceLab_physics-informed.ipynb) implements DeepONet following [Physics-informed-DeepONets](https://github.com/PredictiveIntelligenceLab/Physics-informed-DeepONets/tree/main) library. This is based on `jax`. The original implementation is buggy and data intensive. It needs data in the form of $(N*P) \times M$ for branch input, $(N*P)\times 2$ for trunk input, and $(N*P) \times 1$ for output, where
@@ -59,4 +59,4 @@ In the current implementation, we use the data as in the first two implementatio
 
 <p align="center"> <img src="./Results_third_method/loss_his.png" width="400"> </p>
 
-<p align="center"> <img src="./Results_third_method/sample_error_plots.png" width="600"> </p>
+<p align="center"> <img src="./Results_third_method/neural_operator_prediction_comparison.png" width="800"> </p>
