@@ -31,7 +31,10 @@ def field_plot_fenics(ax, f, Vh, add_displacement_to_nodes = False, \
     else:
         f_fn = dl.Function(Vh)
         f_fn.vector().zero()
-        f_fn.vector().axpy(1.0, f)
+        if isinstance(f, np.ndarray):
+            f_fn.vector().set_local(f)
+        else:
+            f_fn.vector().axpy(1.0, f)
     
     mesh = Vh.mesh()
     gdim = mesh.geometry().dim()
