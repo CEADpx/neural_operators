@@ -24,7 +24,7 @@ class DeepONet(nn.Module):
         self.out_coordinate_dimension = out_coordinate_dimension
         self.num_Y_components = num_Y_components
 
-        #creating the branch network#
+        # creating the branch network
         self.branch_net = MLP(input_size=num_inp_fn_points, \
                               hidden_size=num_neurons, \
                               num_classes=num_br_outputs, \
@@ -32,7 +32,7 @@ class DeepONet(nn.Module):
                               act=act)
         self.branch_net.float()
 
-        #creating the trunk network#
+        # creating the trunk network
         self.trunk_net = MLP(input_size=out_coordinate_dimension, \
                              hidden_size=num_neurons, \
                              num_classes=num_tr_outputs, \

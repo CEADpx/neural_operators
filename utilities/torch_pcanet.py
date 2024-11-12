@@ -17,7 +17,7 @@ class PCANet(nn.Module):
 
         super(PCANet, self).__init__()
 
-        #creating the branch network#
+        # creating the branch network
         self.net = MLP(input_size=num_inp_red_dim, \
                               hidden_size=num_neurons, \
                               num_classes=num_out_red_dim, \
