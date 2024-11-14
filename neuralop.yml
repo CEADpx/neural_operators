@@ -10,13 +10,13 @@ dependencies:
   - scipy
   - jupyter
   - tensorflow
-  - pytorch
-  - functools
+  # - functools
+  - torch
   - jax
-  - tqdm
+  # - tqdm
   - pip
   - pip:
-    - torch
+    # - torch
     - seaborn
     - meshio
     - pympler
