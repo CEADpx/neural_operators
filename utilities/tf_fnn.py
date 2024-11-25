@@ -1,12 +1,9 @@
-# os.environ['CUDA_VISIBLE_DEVICES']='-1'
+import numpy as np
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior() 
 
-import numpy as np
-
-
-
 class FNN:
+
     def __init__(self):
         pass
     
@@ -25,6 +22,7 @@ class FNN:
 
         return W, b
 
+    # trunk network
     def fnn_T(self, W, b, X, Xmin, Xmax):
         A = 2.0*(X - Xmin)/(Xmax - Xmin) - 1.0
         L = len(W)
@@ -34,6 +32,7 @@ class FNN:
         
         return Y
     
+    # branch network
     def fnn_B(self, W, b, X):
         A = X
         L = len(W)

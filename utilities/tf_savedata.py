@@ -1,11 +1,11 @@
-# os.environ['CUDA_VISIBLE_DEVICES']='-1'
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior() 
-
 import numpy as np
 import scipy
 
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior() 
+
 class SaveData:
+    
     def __init__(self):
         pass
 

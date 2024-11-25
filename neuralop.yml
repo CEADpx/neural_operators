@@ -1,5 +1,7 @@
 # create environment `neuralop` using 
 # conda env create -f neuralop.yml
+# additional package
+# pip install 'jupyterlab>=3' ipywidgets 'pyvista[all,trame]'
 name: neuralop
 channels:
   - conda
@@ -23,3 +25,4 @@ dependencies:
     - hippylib
     - h5py
     - pygmsh
+    - pyvista
