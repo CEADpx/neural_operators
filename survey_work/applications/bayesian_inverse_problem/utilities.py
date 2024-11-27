@@ -4,7 +4,7 @@ import os
 import numpy as np
 from scipy.interpolate import griddata
 
-src_path = "../"
+src_path = "../../../src/"
 sys.path.append(src_path + 'mcmc')
 from state import State
 from tracer import Tracer
