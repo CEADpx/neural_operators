@@ -1,18 +1,36 @@
-# neural_operators_survey
+# neural_operators
 
 This repository aims to implement (or interface with existing libraries) various neural operators and apply them to solve a few parametric linear PDEs. 
 
-## neural_models
-To host different neural network/operator models.
+## Content description
 
-## problems
-Files for the two model problems.
+We include [neuralop.yml](neuralop.yml) file that can be used to setup the conda environment. The scripts and notebooks are mostly used in Ubuntu 24.04 and hopefully the dependencies mentioned in the script will be sufficient to run the files.
 
-## utilities
-Some utility functions.
+Next, some key directories are described. 
 
-## neuralop.yml
-Dependencies are listed in this file, and it can be used to create a conda environment to test various scripts in this repository. 
+### [src](src)
+This directory contains various methods and classes used in `survey_work`. It tries to make the problems object-oriented so that same functions are not defined from scratch. Specifically, the directory contains following methods:
 
-## base_example_to_try_different_implementations
-In this folder, base example of Poisson's equation on triangle domain with notch is considered and the map from Dirichlet boundary condition to the PDE solution is learned using DeepONet. **Different versions of implementations available in various repositories are considered as a first step in this survey.** The [README.md](base_example_to_try_different_implementations/README.md) provides further details. 
+1. [src/data](src/data): Data related methods to process data and make it ready for neural networks.
+1. [src/pde](src/pde): PDE related methods to model the PDE-based forward problem. We rely on Fenics for finite element method.
+1. [src/prior](src/prior): We implement Gaussian-measure based prior for generating samples of random fields in function space. It implements the Gaussian prior based on the inverse of elliptic operator. 
+1. [src/nn](src/nn): Implementation of three key neural operators `DeepONet`, `PCANet`, and `FNO` using torch library.
+1. [src/mcmc](src/mcmc): MCMC implementation. The implementation is done from scratch, and as such it does not depend on any external library for MCMC. 
+1. [src/plotting](src/plotting): Several functions for plotting fields on finite element unstructured and grid mesh and point and scatter data are included. 
+
+### [survey_work](survey_work)
+This directory contains the scripts, notebooks, and results for the neural oeprator survey article. Key files and directories in this directory are as follows
+
+#### [survey_work/problems](survey_work/problems) 
+Neural operators are applied to Poisson and Linear Elasticity problems. This directory contains the notebooks used to generate data and train and test three neural operators, `DeepONet`, `PCANet`, and `FNO`.
+
+#### [survey_work/applications](survey_work/applications) 
+
+Neural oeprators as a surrogate of the forward model is applied to [Bayesian inverse](survey_work/applications/bayesian_inverse_problem) and [topology optimization](survey_work/applications/topology_optimization) problems. The subdirectories contain implementation and results for these two applications. 
+
+#### [survey_work/test_different_implementations_from_public_repositories](survey_work/test_different_implementations_from_public_repositories)
+The contents in this directory were extremely useful in testing the neural operator implementations. Different versions of implementations available in publicly-shared repositories are considered as a first step in our goal to survey the neural operator techniques. The [README.md](survey_work/test_different_implementations_from_public_repositories/README.md) inside this directory provides further details. Based on the information gained, three neural operator models `DeepONet`, `PCANet`, and `FNO` are implemented using `torch` library and as mentioned earlier the implementations are in [src](src) directory.
+
+
+
+ 
