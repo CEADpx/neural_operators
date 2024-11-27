@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as dl
 
 # local utility methods
-src_path = "../../src/"
+src_path = "../../../src/"
 sys.path.append(src_path + 'pde/')
 from pdeModel import PDEModel
 
