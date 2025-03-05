@@ -19,3 +19,11 @@ The directory contains the results of the above two notebooks.
 
 ## processed_results
 The folder contains the notebook to process the Bayesian inference results from the ``true" and surrogate models. 
+
+The results in the survey paper are based on the results in the following four folders:
+- `FINAL_mcmc_results_n_samples_10000_n_burnin_500_pcn_beta_0.200_sigma_1.393e-01`
+- `FINAL_mcmc_results_n_samples_10000_n_burnin_500_pcn_beta_0.200_sigma_1.393e-01_surrogate_DeepONet`
+- `FINAL_mcmc_results_n_samples_10000_n_burnin_500_pcn_beta_0.200_sigma_1.393e-01_surrogate_PCANet`
+- `FINAL_mcmc_results_n_samples_10000_n_burnin_500_pcn_beta_0.200_sigma_1.393e-01_surrogate_FNO`
+
+These folders can be found in the subdirectory `survey_work/applications/bayesian_inverse_problem_poisson/Results/` [NeuralOperator_Survey_Shared_Data_March2025](https://www.dropbox.com/scl/fo/5dg02otewg7j0bt7rhkuf/AOfAAc2SaWOgO-Yg25IlTXs?rlkey=t900geej8y8z327y5f8wu4yc9&st=t9c8qimk&dl=0).
