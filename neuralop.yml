@@ -1,28 +1,26 @@
 # create environment `neuralop` using 
 # conda env create -f neuralop.yml
-# additional package
-# pip install 'jupyterlab>=3' ipywidgets 'pyvista[all,trame]'
 name: neuralop
 channels:
   - conda
   - conda-forge
 dependencies:
-  - fenics==2019.1.0
+  - python=3.12
+  - fenics=2019.1.0
   - matplotlib
   - scipy
   - jupyter
+  - 'jupyterlab>=3'
+  - ipywidgets
   - tensorflow
-  # - functools
-  - torch
   - jax
-  # - tqdm
   - pip
   - pip:
-    # - torch
+    - torch
     - seaborn
     - meshio
     - pympler
     - hippylib
     - h5py
     - pygmsh
-    - pyvista
+    - pyvista[all,trame]
