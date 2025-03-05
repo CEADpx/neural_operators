@@ -37,7 +37,7 @@ class LinearElasticityModel(PDEModel):
         # input and output functions (will be updated in solveFwd)
         self.m_fn = dl.Function(self.Vm)
         self.u_fn = dl.Function(self.Vu)
-        self.m_fn.vector().set_local(self.m_mean[self.Vm_d2v])
+        self.m_fn = self.vertex_to_function(self.m_mean, self.m_fn, is_m = True)
 
         # variational form
         self.u_trial = dl.TrialFunction(self.Vu)
@@ -116,7 +116,7 @@ class LinearElasticityModel(PDEModel):
 
         # set m
         self.m_fn.vector().zero()
-        self.m_fn.vector().set_local(self.m_transformed[self.Vm_d2v])
+        self.vertex_to_function(self.m_transformed, self.m_fn, is_m = True)
 
         # reassamble (don't need to reassemble L)
         self.assemble(assemble_lhs = True, assemble_rhs = False)
@@ -124,12 +124,7 @@ class LinearElasticityModel(PDEModel):
         # solve
         dl.solve(self.lhs, self.u_fn.vector(), self.rhs)
 
-        if u is not None:
-            # set the solution (dolfin vector to vertex_dof ordered vector)
-            u = self.u_fn.compute_vertex_values().copy()
-            return u
-        else:
-            return self.u_fn.compute_vertex_values().copy()
+        return self.function_to_vertex(self.u_fn, u, is_m = False)
 
     def samplePrior(self, m = None, transform_m = False):
         if transform_m:
