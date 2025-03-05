@@ -154,6 +154,7 @@ def quick_field_plot(fn_nodal_values, nodes, \
                         figsize = (6,6), \
                         fs = 20, \
                         savefilename = None, \
+                        show_plot = True, \
                         **kwargs):
     
     fig, ax = plt.subplots(figsize=figsize)
@@ -174,7 +175,9 @@ def quick_field_plot(fn_nodal_values, nodes, \
         ax.set_title(title, fontsize=fs)
     if savefilename is not None:
         plt.savefig(savefilename,  bbox_inches='tight')
-    plt.show()
+
+    if show_plot:
+        plt.show()
 
 def quick_field_plot_grid(fn_nodal_values, grid_x, grid_y, \
                         title = None, \
@@ -184,6 +187,7 @@ def quick_field_plot_grid(fn_nodal_values, grid_x, grid_y, \
                         figsize = (6,6), \
                         fs = 20, \
                         savefilename = None, \
+                        show_plot = True, \
                         **kwargs):
     
     fig, ax = plt.subplots(figsize=figsize)
@@ -204,4 +208,6 @@ def quick_field_plot_grid(fn_nodal_values, grid_x, grid_y, \
         ax.set_title(title, fontsize=fs)
     if savefilename is not None:
         plt.savefig(savefilename,  bbox_inches='tight')
-    plt.show()
+
+    if show_plot:
+        plt.show()

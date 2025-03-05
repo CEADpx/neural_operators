@@ -1,5 +1,114 @@
+import sys
 import numpy as np
 import dolfin as dl
+
+src_path = "../"
+sys.path.append(src_path + 'plotting/')
+from field_plot import *
+from plot_mix_collection import *
+
+import matplotlib.pyplot as plt
+plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+
+
+def build_vector_vertex_maps(V, debug = False):
+
+    nodes = V.mesh().coordinates()
+    num_nodes = nodes.shape[0]
+
+    n_comps = V.dim()//num_nodes
+
+    map_vec_to_vertex = np.zeros(V.dim(), dtype=int)
+    map_vertex_to_vec = np.zeros(V.dim(), dtype=int)
+
+    u_fn = dl.Function(V)
+
+    for i in range(num_nodes):
+
+        for j in range(n_comps):
+            ii = num_nodes*j + i
+            # at ith node, set displacement at ith dof and find the its location in the vector data
+            u_fn.vector().zero()
+            u_fn.vector()[ii] = 1.
+            u_vv = u_fn.compute_vertex_values()
+
+            # quick_field_plot(u_fn.compute_vertex_values(), V.mesh().coordinates(), title = 'u_fn')
+
+
+            # find index where u_vec is nonzero
+            idx = np.where(u_vv != 0)[0][0]
+
+            if debug:
+                u_vec = u_fn.vector().get_local()
+                xi = nodes[idx%num_nodes]
+                u_x = u_fn(xi)
+
+                print('ii = {}, idx = {}, x = {}, u(x) = {}, u_ve[{}] = {}, u_vv[{}] = {}'.format(ii, \
+                                idx, xi, u_x, \
+                                    ii, u_vec[ii], idx, u_vv[idx]))
+            
+            map_vertex_to_vec[ii] = idx
+            map_vec_to_vertex[idx] = ii
+
+    return map_vec_to_vertex, map_vertex_to_vec
+
+def test_vector_vertex_maps():
+    # create mesh
+    mesh = dl.UnitSquareMesh(10, 10)
+    V = dl.VectorFunctionSpace(mesh, "Lagrange", 1)
+    nodes = mesh.coordinates()
+    num_nodes = nodes.shape[0]
+
+    map_vec_to_vertex, map_vertex_to_vec = build_vector_vertex_maps(V)
+
+    u_fn = dl.Function(V)
+    u_fn.interpolate(dl.Expression(("0.1*x[0]*x[1]", "-0.1*x[0]*x[1]"), degree=2))
+
+    u2_fn = dl.Function(V)
+
+    u_vec = u_fn.vector().get_local()
+    u_vv = u_vec[map_vec_to_vertex]
+
+    u_cvv = u_fn.compute_vertex_values()
+
+    u_vec_vv = u_vec[map_vec_to_vertex]
+    u_fn.vector().set_local(u_vec_vv[map_vertex_to_vec])
+
+    u_vv_vec = u_vv[map_vertex_to_vec]
+    u2_fn.vector().set_local(u_vv_vec)
+
+    u_cvv_vec = u_cvv[map_vertex_to_vec]
+    u3_fn = dl.Function(V)
+    u3_fn.vector().set_local(u_cvv_vec)
+
+    # create data for plot
+    ncols = 4
+    data = get_default_plot_mix_collection_data()
+    data['figsize'] = (20, 20)
+    data['fs'] = 20
+    data['rows'] = 2
+    data['cols'] = ncols
+    data['nodes'] = mesh.coordinates()
+    data['sup_title'] = 'u_vv, u_vec, and their conversions'
+
+    uvec = [[u_vv, u_vec_vv, u_cvv, u3_fn.vector().get_local()[map_vec_to_vertex]], \
+            [u_vec, u_vv_vec, u2_fn.vector().get_local(), u3_fn.vector().get_local()]]
+
+    title_vec = np.array([['u_vv', 'u_vec_vv', 'u_cvv', 'u_cvv_fn'], \
+                        ['u_vec', 'u_vv_vec', 'u_vv_vec_fn', 'u_cvv_vec_fn']])
+
+
+    data['u']= uvec
+    data['title'] = title_vec
+    data['cmap'] = np.array([['jet' for _ in range(ncols)], ['viridis' for _ in range(ncols)]])
+    data['axis_off'] = [[True for _ in range(ncols)], [True for _ in range(ncols)]]
+    data['is_vec'] = [[True for _ in range(ncols)], [True for _ in range(ncols)]]
+    data['add_disp'] = [[True for _ in range(ncols)], [True for _ in range(ncols)]]
+    data['plot_type'] = [['field' for _ in range(ncols)], ['field' for _ in range(ncols)]]
+
+    plot_mix_collection(data)
+
+    
 
 def function_to_vector(u, u_vec = None):
     if u_vec is not None:

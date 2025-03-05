@@ -1,6 +1,6 @@
-import sys
 import numpy as np
 import dolfin as dl
+from fenicsUtilities import build_vector_vertex_maps
 
 class PDEModel:
     
@@ -20,11 +20,9 @@ class PDEModel:
         self.m_nodes = self.mesh.coordinates()
         self.u_nodes = self.m_nodes
         
-        self.Vm_v2d = dl.vertex_to_dof_map(self.Vm)
-        self.Vm_d2v = dl.dof_to_vertex_map(self.Vm)
-
-        self.Vu_v2d = dl.vertex_to_dof_map(self.Vu)
-        self.Vu_d2v = dl.dof_to_vertex_map(self.Vu)
+        # vertex to dof vector and dof vector to vertex maps
+        self.Vm_vec2vv, self.Vm_vv2vec = build_vector_vertex_maps(self.Vm)
+        self.Vu_vec2vv, self.Vu_vv2vec = build_vector_vertex_maps(self.Vu)
 
         self.m_dim = self.Vm.dim()
         self.u_dim = self.Vu.dim()
@@ -69,6 +67,70 @@ class PDEModel:
     
     def empty_m(self):
         return np.zeros(self.m_dim)
+    
+    def function_to_vertex(self, m_fn, m_vv = None, is_m = True):
+        if is_m:
+            if m_vv is None:
+                return m_fn.vector().get_local()[self.Vm_vec2vv].copy()
+            else:
+                m_vv = m_fn.vector().get_local()[self.Vm_vec2vv].copy()
+                return m_vv
+        else:
+            if m_vv is None:
+                return m_fn.vector().get_local()[self.Vu_vec2vv].copy()
+            else:
+                m_vv = m_fn.vector().get_local()[self.Vu_vec2vv].copy()
+                return m_vv
+            
+    def vertex_to_function(self, m_vv, m_fn = None, is_m = True):
+        if is_m:
+            if m_fn is None:
+                m_fn = dl.Function(self.Vm)
+                m_fn.vector().set_local(m_vv[self.Vm_vv2vec])
+                return m_fn
+            else:
+                m_fn.vector().set_local(m_vv[self.Vm_vv2vec])
+                return m_fn
+        else:
+            if m_fn is None:
+                m_fn = dl.Function(self.Vu)
+                m_fn.vector().set_local(m_vv[self.Vu_vv2vec])
+                return m_fn
+            else:
+                m_fn.vector().set_local(m_vv[self.Vu_vv2vec])
+                return m_fn
+            
+    def function_to_vector(self, m_fn, m_vec = None, is_m = True):
+        if is_m:
+            if m_vec is None:
+                return m_fn.vector().get_local().copy()
+            else:
+                m_vec = m_fn.vector().get_local().copy()
+                return m_vec
+        else:
+            if m_vec is None:
+                return m_fn.vector().get_local().copy()
+            else:
+                m_vec = m_fn.vector().get_local().copy()
+                return m_vec
+            
+    def vector_to_function(self, m_vec, m_fn = None, is_m = True):
+        if is_m:
+            if m_fn is None:
+                m_fn = dl.Function(self.Vm)
+                m_fn.vector().set_local(m_vec)
+                return m_fn
+            else:
+                m_fn.vector().set_local(m_vec)
+                return m_fn
+        else:
+            if m_fn is None:
+                m_fn = dl.Function(self.Vu)
+                m_fn.vector().set_local(m_vec)
+                return m_fn
+            else:
+                m_fn.vector().set_local(m_vec)
+                return m_fn
     
     def compute_mean(self, m):
         print("compute_mean method not implemented. Should be defined by inherited class.")

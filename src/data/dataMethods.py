@@ -327,32 +327,32 @@ class DataProcessorFNO:
 
         # grid coordinates data
         # we select every coarsen_grid_factor-th point so that we can coarsen the grid
-        grid_x = data['grid_x'][::self.coarsen_grid_factor, ::self.coarsen_grid_factor]
-        grid_y = data['grid_y'][::self.coarsen_grid_factor, ::self.coarsen_grid_factor]
+        self.grid_x = data['grid_x'][::self.coarsen_grid_factor, ::self.coarsen_grid_factor]
+        self.grid_y = data['grid_y'][::self.coarsen_grid_factor, ::self.coarsen_grid_factor]
 
-        self.num_grid_x = grid_x.shape[0]
-        self.num_grid_y = grid_x.shape[1]
+        self.num_grid_x = self.grid_x.shape[0]
+        self.num_grid_y = self.grid_x.shape[1]
 
         # grid coordinates data
-        self.grid_x_train = np.tile(grid_x, \
+        self.grid_x_train = np.tile(self.grid_x, \
                                (self.num_train, 1, 1)\
                                ).reshape(self.num_train, \
                                          self.num_grid_x, \
                                          self.num_grid_y, 1) # exra dim
         
-        self.grid_y_train = np.tile(grid_y, \
+        self.grid_y_train = np.tile(self.grid_y, \
                                (self.num_train, 1, 1)\
                                ).reshape(self.num_train, \
                                          self.num_grid_x, \
                                          self.num_grid_y, 1) # exra dim
         
-        self.grid_x_test = np.tile(grid_x, \
+        self.grid_x_test = np.tile(self.grid_x, \
                                (self.num_test, 1, 1)\
                                ).reshape(self.num_test, \
                                          self.num_grid_x, \
                                          self.num_grid_y, 1) # exra dim
         
-        self.grid_y_test = np.tile(grid_y, \
+        self.grid_y_test = np.tile(self.grid_y, \
                                (self.num_test, 1, 1)\
                                ).reshape(self.num_test, \
                                          self.num_grid_x, \

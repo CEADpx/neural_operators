@@ -47,6 +47,8 @@ def point_plot(ax, nodal_values, nodes, \
 def quick_point_plot(nodal_values, nodes, \
                     title = None, \
                     cmap = None, \
+                        add_displacement_to_nodes = False, \
+                        is_displacement = False, \
                     fs = 20, \
                     figsize = (8, 8),
                     axis_off = False, \
@@ -54,10 +56,14 @@ def quick_point_plot(nodal_values, nodes, \
     
 
     fig, ax = plt.subplots(figsize=figsize)
-    if cmap is not None:
-        cbar = point_plot(ax, nodal_values, nodes, cmap = cmap)
+    cmap = 'jet' if cmap is None else cmap
+
+    if is_displacement:
+        cbar = point_plot(ax, nodal_values, nodes, cmap = cmap, 
+                          is_displacement = is_displacement,
+                          add_displacement_to_nodes = add_displacement_to_nodes)
     else:
-        cbar = point_plot(ax, nodal_values, nodes)
+        cbar = point_plot(ax, nodal_values, nodes, cmap = cmap)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size='8%', pad=0.03)
     cax.tick_params(labelsize=20)

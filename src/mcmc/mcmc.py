@@ -23,6 +23,10 @@ class MCMC:
         self.m_dim = self.model.m_dim
         self.u_dim = self.model.u_dim
 
+        self.m_comps = self.m_dim // self.model.m_nodes.shape[0]
+        self.u_comps = self.u_dim // self.model.u_nodes.shape[0]
+
+        self.m_nodes = self.model.m_nodes
         self.u_nodes = self.model.u_nodes
         
         # prior class that provides () and logPrior()
@@ -45,7 +49,7 @@ class MCMC:
         self.grid_x_obs = data['grid_x']
         self.grid_y_obs = data['grid_y']
         self.u_obs = data['u_obs']
-        self.u_obs_dim = len(self.x_obs)
+        self.u_obs_dim = self.u_obs.shape[0]
         self.w_true = data['w_true']
         self.m_true = data['m_true']
         self.u_true = data['u_true']
@@ -68,6 +72,13 @@ class MCMC:
         self.tracer = Tracer(self) 
         self.log_file = None
 
+        # postprocessing params
+        self.pp_params = {'curve_plot': {'fs': 24, 'lw': 3, 'figsize': (6,4)}, \
+                          'field_plot': {'fs': 24, 'y_sup_title': 1.075, \
+                    'figsize': (20, 12), 'ttl_pad': 10, \
+                    'u_vec_plot': True, 'cmap_w': 'magma', 'cmap_m': 'jet', \
+                    'cmap_u': 'jet', 'cmap_uobs': 'copper'}}
+
     def get_mcmc_params_for_tracer(self):
         return {'pcn_beta': self.pcn_beta, \
                 'sigma_noise': self.sigma_noise, \
@@ -85,7 +96,16 @@ class MCMC:
         return current.u
     
     def state_to_obs(self, u):
-        return griddata(self.u_nodes, u, self.x_obs, method='linear')
+        if self.u_comps == 1:
+            return griddata(self.u_nodes, u, self.x_obs, method='linear')
+        else:
+            num_nodes = self.u_nodes.shape[0]
+            num_grid_nodes = self.x_obs.shape[0]
+            obs = np.zeros(num_grid_nodes*2)
+            for i in range(self.u_comps):
+                obs[i*num_grid_nodes:(i+1)*num_grid_nodes] = griddata(self.u_nodes, u[i*num_nodes:(i+1)*num_nodes], self.x_obs, method='linear')
+            
+            return obs
     
     def logLikelihood(self, current):
         current.u = self.solveFwd(current)
@@ -111,7 +131,7 @@ class MCMC:
     def sample(self, current):
         # compute the proposed state
         self.proposed.m = self.proposal(current, self.proposed)
-        self.proposed.log_likelihood= self.logPosterior(self.proposed)
+        self.proposed.log_posterior = self.logPosterior(self.proposed)
         
         # accept or reject (based on log-likelihood, i.e., -cost, for preconditioned Crank Nicholson following Stuart 2010 and HippyLib)
         alpha = current.cost - self.proposed.cost # or -current.log_likelihood + self.proposed.log_likelihood
@@ -254,21 +274,24 @@ class MCMC:
             return 
 
         # cost
+        pp = self.pp_params['curve_plot']
+
         plot_curve(self.tracer.accepted_samples_cost, xl=r'Samples', \
             yl= r'Cost = $-\log(\pi_{like}(u_{obs} | w))$', \
-            fs = 20, lw = 3, \
+            fs = pp['fs'], lw = pp['lw'], \
             savefile = self.tracer.savepath + 'cost_iter_{}.png'.format(i), \
-            figsize=[6,4])
+            figsize=pp['figsize'])
         
         # acceptance rate
         plot_curve(self.tracer.acceptance_rate, xl=r'Samples', \
             yl= r'Acceptance rate', \
-            fs = 20, lw = 3, \
+            fs = pp['fs'], lw = pp['lw'], \
             savefile = self.tracer.savepath + 'acceptance_rate_iter_{}.png'.format(i), \
-            figsize=[6,4])
+            figsize=pp['figsize'])
 
         # compare true and posterior mean fields
-        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_iter_{}.png'.format(i))
+        pp = self.pp_params['field_plot']
+        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_iter_{}.png'.format(i), params = pp)
 
     def save(self, i, current, accept):
         # save tracer

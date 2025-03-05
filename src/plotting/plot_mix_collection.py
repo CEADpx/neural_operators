@@ -23,7 +23,7 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
     figsize = (20, 20), fs = 20, sup_title = None, y_sup_title = 1.025, \
     savefilename = None, fig_pad = 1.08, cax_size = '8%', cax_pad = 0.03, \
     u = None, cmap = None, title = None, \
-    plot_type = None, \
+    plot_type = None, cbar_fmt = None, \
     axis_off = None, is_vec = None, add_disp = None):
 
     if u is None:
@@ -40,6 +40,8 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
         add_disp = [[False for _ in range(cols)] for _ in range(rows)]
     if plot_type is None:
         plot_type = [[None for _ in range(cols)] for _ in range(rows)]
+    if cbar_fmt is None:
+        cbar_fmt = [[None for _ in range(cols)] for _ in range(rows)]
 
     return {
         'rows': rows,
@@ -62,7 +64,8 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
         'axis_off': axis_off,
         'is_vec': is_vec,
         'add_disp': add_disp,
-        'plot_type': plot_type
+        'plot_type': plot_type,
+        'cbar_fmt': cbar_fmt
     }
 
 
@@ -99,6 +102,7 @@ def plot_mix_collection(data):
             axis_off = data['axis_off'][i][j] if 'axis_off' in data else True
             is_vec = data['is_vec'][i][j] if 'is_vec' in data else False
             add_disp = data['add_disp'][i][j] if 'add_disp' in data else False
+            cb_fmt = data['cbar_fmt'][i][j] if 'cbar_fmt' in data else None
             
             ptype = data['plot_type'][i][j] if 'plot_type' in data else 'field'
             if ptype not in ['grid', 'field', 'point']:
@@ -133,14 +137,17 @@ def plot_mix_collection(data):
                         add_displacement_to_nodes = add_disp)
                 elif ptype == 'point':
                     cbar = point_plot(axs[i,j], \
-                        u, nodes, cmap = cmap, \
+                        u, nodes_point_plot, cmap = cmap, \
                         is_displacement = True, \
                         add_displacement_to_nodes = add_disp)
 
             divider = make_axes_locatable(axs[i,j])
             cax = divider.append_axes('right', size=cax_size, pad=cax_pad)
             cax.tick_params(labelsize=fs)
-            cbar = fig.colorbar(cbar, cax=cax, orientation='vertical')
+            if cb_fmt is not None:
+                cbar = fig.colorbar(cbar, cax=cax, orientation='vertical', format = cb_fmt)
+            else:
+                cbar = fig.colorbar(cbar, cax=cax, orientation='vertical')
             if axis_off:
                 axs[i,j].axis('off')
             if ttl is not None:

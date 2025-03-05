@@ -8,7 +8,7 @@ from dataMethods import DataProcessorFNO
 
 def load_data_and_fno(data_path, model_path):
     
-    nn = torch.load(model_path)
+    nn = torch.load(model_path, weights_only=False)
 
     # load data (it is needed for encoding and decoding of new inputs and outputs)
     data = DataProcessorFNO(data_path, \

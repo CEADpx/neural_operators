@@ -25,7 +25,7 @@ class PCANet(nn.Module):
         if save_file is None:
             self.save_file = './PCANet_model/model.pkl'
 
-        # branch network
+        # network
         self.net = MLP(input_size=num_inp_red_dim, \
                               hidden_size=num_neurons, \
                               num_classes=num_out_red_dim, \

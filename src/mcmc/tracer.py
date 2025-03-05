@@ -7,6 +7,10 @@ class Tracer:
 
         self.mcmc_params = mcmc.get_mcmc_params_for_tracer()
 
+        self.x_obs = mcmc.x_obs
+        self.u_nodes = mcmc.u_nodes
+        self.m_nodes = mcmc.m_nodes
+        
         self.init_m = np.zeros(mcmc.m_dim)
         self.init_u = np.zeros(mcmc.u_dim)
         self.init_u_obs = np.zeros(mcmc.u_obs_dim)

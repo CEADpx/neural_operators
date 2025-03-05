@@ -1,5 +1,10 @@
+import sys
 import numpy as np
 import dolfin as dl
+
+src_path = "../"
+sys.path.append(src_path + 'pde/')
+from fenicsUtilities import build_vector_vertex_maps
 
 class PriorSampler:
 
@@ -14,8 +19,8 @@ class PriorSampler:
         # function space
         self.V = V
 
-        self.V_v2d = dl.vertex_to_dof_map(self.V)
-        self.V_d2v = dl.dof_to_vertex_map(self.V)
+        # vertex to dof vector and dof vector to vertex maps
+        self.V_vec2vv, self.V_vv2vec = build_vector_vertex_maps(self.V)
 
         # Source function
         self.s_fn = dl.Function(self.V)
@@ -57,6 +62,38 @@ class PriorSampler:
         self.lhs = dl.assemble(self.a_form)
         self.rhs = dl.assemble(self.L_form)
 
+    def function_to_vertex(self, u_fn, u_vv = None):
+        if u_vv is None:
+            return u_fn.vector().get_local()[self.V_vec2vv].copy()
+        else:
+            u_vv = u_fn.vector().get_local()[self.V_vec2vv].copy()
+            return u_vv
+            
+    def vertex_to_function(self, u_vv, u_fn = None):
+        if u_fn is None:
+            u_fn = dl.Function(self.V)
+            u_fn.vector().set_local(u_vv[self.V_vv2vec])
+            return u_fn
+        else:
+            u_fn.vector().set_local(u_vv[self.V_vv2vec])
+            return u_fn
+            
+    def function_to_vector(self, u_fn, u_vec = None):
+        if u_vec is None:
+            return u_fn.vector().get_local().copy()
+        else:
+            u_vec = u_fn.vector().get_local().copy()
+            return u_vec
+            
+    def vector_to_function(self, u_vec, u_fn = None):
+        if u_fn is None:
+            u_fn = dl.Function(self.V)
+            u_fn.vector().set_local(u_vec)
+            return u_fn
+        else:
+            u_fn.vector().set_local(u_vec)
+            return u_fn
+
     def compute_mean(self, m):
         self.s_fn.vector().zero()
         self.mean_fn.vector().zero()
@@ -68,13 +105,13 @@ class PriorSampler:
         dl.solve(self.lhs, self.mean_fn.vector(), self.rhs)
 
         # vertex_dof ordered
-        m = self.mean_fn.vector().get_local()[self.V_v2d]
+        m = self.mean_fn.vector().get_local()[self.V_vec2vv]
         return m
 
     def set_diffusivity(self, diffusion):
 
         # assume diffusion is vertex_dof ordered
-        self.b_fn.vector().set_local(diffusion[self.V_d2v])
+        self.b_fn.vector().set_local(diffusion[self.V_vv2vec])
         
         # need to recompute quantities including the mean
         self.mean = self.compute_mean(self.mean)
@@ -96,7 +133,7 @@ class PriorSampler:
         self.u_fn.vector().axpy(1., self.mean_fn.vector())
 
         # vertex_dof ordered
-        self.u = self.u_fn.vector().get_local()[self.V_v2d]
+        self.u = self.u_fn.vector().get_local()[self.V_vec2vv]
         
         # compute log-prior
         log_prior = -np.sqrt(self.s_fn.vector().inner(self.M_mat * self.s_fn.vector()))
@@ -113,7 +150,7 @@ class PriorSampler:
         self.s_fn.vector().zero()
 
         self.u_fn.vector().zero()
-        self.u_fn.vector().set_local(m[self.V_d2v])
+        self.u_fn.vector().set_local(m[self.V_vv2vec])
         
         self.s_fn.vector().axpy(1., self.lhs * (self.u_fn.vector() - self.mean_fn.vector()))
         log_prior = -np.sqrt(self.s_fn.vector().inner(self.M_mat * self.s_fn.vector()))
