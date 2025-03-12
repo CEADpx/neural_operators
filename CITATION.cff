@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Jha"
+  given-names: "Prashant K."
+  orcid: "https://orcid.org/0000-0003-2158-364X"
+doi: "10.5281/zenodo.15014504"
+title: "CEADpx: neural_operators"
+version: survey25_v1
+date-released: 2025-03-06
+url: "https://github.com/CEADpx/neural_operators"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Jha"
+    given-names: "Prashant K."
+    orcid: "https://orcid.org/0000-0003-2158-364X"
+  doi: "10.48550/arXiv.2503.05598"
+  journal: "arXiv"
+  month: 3
+  start: 1 # First page number
+  end: 53 # Last page number
+  title: "From Theory to Application: A Practical Introduction to Neural Operators in Scientific Computing"
+  year: 2025
