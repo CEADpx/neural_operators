@@ -32,5 +32,17 @@ Neural oeprators as a surrogate of the forward model is applied to [Bayesian inv
 The contents in this directory were extremely useful in testing the neural operator implementations. Different versions of implementations available in publicly-shared repositories are considered as a first step in our goal to survey the neural operator techniques. The [README.md](survey_work/test_different_implementations_from_public_repositories/README.md) inside this directory provides further details. Based on the information gained, three neural operator models `DeepONet`, `PCANet`, and `FNO` are implemented using `torch` library and as mentioned earlier the implementations are in [src](src) directory.
 
 
+## Citing this work
 
+Code:
+<a id="1">[1]</a> 
+Jha, P. K. (2025). 
+CEADpx: neural_operators (survey25_v1).
+Zenodo, link: https://doi.org/10.5281/zenodo.15014505
+
+Article:
+<a id="1">[2]</a> 
+Jha, P. K. (2025). 
+From Theory to Application: A Practical Introduction to Neural Operators in Scientific Computing.
+arXiv, arXiv:2503.05598, link: https://arxiv.org/abs/2503.05598
  
