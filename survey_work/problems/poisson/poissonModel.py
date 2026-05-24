@@ -1,5 +1,5 @@
+import os
 import sys
-from pathlib import Path
 
 import numpy as np
 import ufl
@@ -12,8 +12,8 @@ from dolfinx.fem.petsc import (
 )
 from petsc4py import PETSc
 
-_root = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(_root / "src" / "pde"))
+_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+sys.path.insert(0, os.path.join(_root, "src", "pde"))
 from pdeModel import PDEModel
 
 
