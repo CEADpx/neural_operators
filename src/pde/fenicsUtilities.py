@@ -13,7 +13,15 @@ def _num_array_dofs(V):
 
 
 def eval_at_vertices(u):
-    """Evaluate a Lagrange function at mesh geometry vertices."""
+    """
+    Evaluate a Lagrange function at mesh geometry vertices.
+
+    Returns a 1D array aligned with ``mesh.geometry.x`` row order.
+    Scalars: one value per vertex.
+    Vectors (block size > 1): interleaved components per vertex,
+    ``[u_0(v0), u_1(v0), u_0(v1), u_1(v1), ...]`` — same layout as ``u.x.array``
+    for P1 spaces on the geometry mesh.
+    """
     V = _function_space(u)
     domain = V.mesh
     points = domain.geometry.x
@@ -50,7 +58,11 @@ def eval_at_vertices(u):
 
 def build_vector_vertex_maps(V, debug=False):
     """
-    Build maps between native FEniCSx coefficient ordering and vertex ordering.
+    Build index maps between ``Function.x.array`` and vertex-ordered nodal values.
+
+    For P1 Lagrange spaces on the geometry mesh, nodal values use the same
+    interleaved component layout as ``u.x.array`` (see ``eval_at_vertices``).
+    Maps are usually identity; the slow probe loop handles non-matching layouts.
 
     Returns
     -------

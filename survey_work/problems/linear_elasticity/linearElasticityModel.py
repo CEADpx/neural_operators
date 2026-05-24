@@ -1,141 +1,196 @@
+import os
 import sys
-import numpy as np
-import dolfin as dl
 
-# local utility methods
-src_path = "../../../src/"
-sys.path.append(src_path + 'pde/')
+import numpy as np
+import ufl
+from dolfinx import default_scalar_type, fem
+from dolfinx.fem.petsc import (
+    apply_lifting,
+    assemble_matrix,
+    assemble_vector,
+    set_bc,
+)
+from petsc4py import PETSc
+
+_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+sys.path.insert(0, os.path.join(_root, "src", "pde"))
 from pdeModel import PDEModel
 
+
 class LinearElasticityModel(PDEModel):
-    
-    def __init__(self, Vm, Vu, \
-                 prior_sampler, \
-                 logn_scale = 1., \
-                 logn_translate = 0., \
-                 seed = 0):
-        
+
+    def __init__(
+        self,
+        Vm,
+        Vu,
+        prior_sampler,
+        logn_scale=1.0,
+        logn_translate=0.0,
+        seed=0,
+    ):
         super().__init__(Vm, Vu, prior_sampler, seed)
 
-        # prior transform parameters
         self.logn_scale = logn_scale
         self.logn_translate = logn_translate
-        
-        # Boundary conditions
-        self.b = dl.Constant((0, 0))
-        self.t = dl.Constant((0, 10))
-        
-        self.bc = [dl.DirichletBC(self.Vu, dl.Constant((0,0)), self.boundaryU)]
 
-        facets = dl.MeshFunction("size_t", self.mesh, self.mesh.topology().dim()-1)
-        dl.AutoSubDomain(self.boundaryQ).mark(facets, 1)
-        self.ds = dl.Measure("ds", domain=self.mesh, subdomain_data=facets)
+        domain = self.mesh
+        qd = {"quadrature_degree": 4}
+        dx = ufl.Measure("dx", domain=domain, metadata=qd)
 
-        # store transformed m where input is from Gaussian prior
+        fdim = domain.topology.dim - 1
+        domain.topology.create_connectivity(fdim, domain.topology.dim)
+
+        # Legacy FEniCS used Measure("ds") without a subdomain index (traction on
+        # the full exterior boundary), not ds(1) on the marked right edge only.
+        ds = ufl.Measure("ds", domain=domain, metadata=qd)
+
+        self.b = ufl.as_vector((0.0, 0.0))
+        self.t = ufl.as_vector((0.0, 10.0))
+
+        dofs = fem.locate_dofs_geometrical(Vu, self._dirichlet_boundary)
+        zero = np.zeros(2, dtype=default_scalar_type)
+        self.bc = [fem.dirichletbc(zero, dofs, Vu)]
+
         self.m_mean = self.compute_mean(self.m_mean)
 
-        # input and output functions (will be updated in solveFwd)
-        self.m_fn = dl.Function(self.Vm)
-        self.u_fn = dl.Function(self.Vu)
-        self.m_fn = self.vertex_to_function(self.m_mean, self.m_fn, is_m = True)
+        self.m_fn = fem.Function(self.Vm)
+        self.vertex_to_function(self.m_mean, self.m_fn, is_m=True)
+        self._update_ghosts(self.m_fn)
 
-        # variational form
-        self.u_trial = dl.TrialFunction(self.Vu)
-        self.u_test = dl.TestFunction(self.Vu)
+        self.u_fn = fem.Function(self.Vu)
+
+        self.u_trial = ufl.TrialFunction(self.Vu)
+        self.u_test = ufl.TestFunction(self.Vu)
 
         self.nu = 0.25
-        self.lam_fact = dl.Constant(self.nu / (1+self.nu)*(1-2*self.nu))
-        self.mu_fact = dl.Constant(1/(2*(1+self.nu)))
+        self.lam_fact = self.nu / ((1 + self.nu) * (1 - 2 * self.nu))
+        self.mu_fact = 1.0 / (2 * (1 + self.nu))
 
-        self.spatial_dim = self.u_fn.geometric_dimension()
-        self.a_form = self.m_fn*dl.inner(self.lam_fact*dl.tr(dl.grad(self.u_trial))*dl.Identity(self.spatial_dim) \
-                                        + 2*self.mu_fact * dl.sym(dl.grad(self.u_trial)), \
-                                    dl.sym(dl.grad(self.u_test)))*dl.dx
-        
-        self.L_form = dl.inner(self.b, self.u_test)*dl.dx + dl.inner(self.t, self.u_test)*self.ds
+        spatial_dim = domain.geometry.dim
+        I = ufl.Identity(spatial_dim)
+        self.a_form = (
+            self.m_fn
+            * ufl.inner(
+                self.lam_fact * ufl.tr(ufl.grad(self.u_trial)) * I
+                + 2 * self.mu_fact * ufl.sym(ufl.grad(self.u_trial)),
+                ufl.sym(ufl.grad(self.u_test)),
+            )
+            * dx
+        )
+        self.L_form = ufl.inner(self.b, self.u_test) * dx + ufl.inner(
+            self.t, self.u_test
+        ) * ds
 
-        # assemble matrix and vector
+        self._a_compiled = None
+        self._L_compiled = None
+        self._ksp = None
+
         self.assemble()
 
     @staticmethod
+    def _dirichlet_boundary(x):
+        return np.isclose(x[0], 0.0, atol=1e-10)
+
+    @staticmethod
+    def _traction_boundary(x):
+        return np.isclose(x[0], 1.0, atol=1e-10)
+
+    @staticmethod
     def boundaryU(x, on_boundary):
-        return on_boundary and dl.near(x[0], 0.)
-    
+        return on_boundary and x[0] < 1e-10
+
     @staticmethod
     def boundaryQ(x, on_boundary):
-        return on_boundary and dl.near(x[0], 1.)
-    
+        return on_boundary and abs(x[0] - 1.0) < 1e-10
+
     @staticmethod
     def is_point_on_dirichlet_boundary(x):
-        # locate boundary nodes
-        tol = 1.e-10
-        if np.abs(x[0]) < tol \
-            or np.abs(x[1]) < tol \
-            or np.abs(x[0] - 1.) < tol \
-            or np.abs(x[1] - 1.) < tol:
-            # select left boundary
+        tol = 1e-10
+        if (
+            np.abs(x[0]) < tol
+            or np.abs(x[1]) < tol
+            or np.abs(x[0] - 1.0) < tol
+            or np.abs(x[1] - 1.0) < tol
+        ):
             if x[0] < tol:
                 return True
         return False
-    
-    def assemble(self, assemble_lhs = True, assemble_rhs = True):
+
+    def _compile_forms(self):
+        if self._a_compiled is None:
+            self._a_compiled = fem.form(self.a_form)
+            self._L_compiled = fem.form(self.L_form)
+
+    def _update_ghosts(self, fn):
+        fn.x.petsc_vec.ghostUpdate(
+            addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD
+        )
+
+    def _setup_solver(self):
+        if self._ksp is None:
+            self._ksp = PETSc.KSP().create(self.mesh.comm)
+            self._ksp.setType(PETSc.KSP.Type.PREONLY)
+            self._ksp.getPC().setType(PETSc.PC.Type.LU)
+        self._ksp.setOperators(self.lhs)
+
+    def assemble(self, assemble_lhs=True, assemble_rhs=True):
+        self._compile_forms()
+
         if assemble_lhs or self.lhs is None:
-            self.lhs = dl.assemble(self.a_form)
+            self.lhs = assemble_matrix(self._a_compiled, bcs=self.bc)
+            self.lhs.assemble()
+            self._ksp = None
+
         if assemble_rhs or self.rhs is None:
-            self.rhs = dl.assemble(self.L_form)
+            self.rhs = assemble_vector(self._L_compiled)
+            apply_lifting(self.rhs, [self._a_compiled], bcs=[self.bc])
+            self.rhs.ghostUpdate(
+                addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE
+            )
+            set_bc(self.rhs, self.bc)
 
-        for bc in self.bc:
-            if assemble_lhs and assemble_rhs:
-                bc.apply(self.lhs, self.rhs)
-            elif assemble_rhs:
-                bc.apply(self.rhs)
-            elif assemble_lhs:
-                bc.apply(self.lhs)
-
-    def transform_gaussian_pointwise(self, w, m_local = None):
+    def transform_gaussian_pointwise(self, w, m_local=None):
         if m_local is None:
-            self.m_transformed = self.logn_scale*np.exp(w) + self.logn_translate
+            self.m_transformed = self.logn_scale * np.exp(w) + self.logn_translate
             return self.m_transformed.copy()
-        else:
-            m_local = self.logn_scale*np.exp(w) + self.logn_translate
-            return m_local
-            
+        return self.logn_scale * np.exp(w) + self.logn_translate
+
     def compute_mean(self, m):
         return self.transform_gaussian_pointwise(self.prior_sampler.mean, m)
-    
-    def solveFwd(self, u = None, m = None, transform_m = False):
 
+    def solveFwd(self, u=None, m=None, transform_m=False):
         if m is None:
             m = self.samplePrior()
-        
-        # see if we need to transform m vector (it is vertex_dof ordered)
+
         if transform_m:
-            self.m_transformed = self.transform_gaussian_pointwise(m, self.m_transformed)
+            self.m_transformed = self.transform_gaussian_pointwise(
+                m, self.m_transformed
+            )
         else:
             self.m_transformed = m
 
-        # set m
-        self.m_fn.vector().zero()
-        self.vertex_to_function(self.m_transformed, self.m_fn, is_m = True)
+        self.vertex_to_function(self.m_transformed, self.m_fn, is_m=True)
+        self._update_ghosts(self.m_fn)
 
-        # reassamble (don't need to reassemble L)
-        self.assemble(assemble_lhs = True, assemble_rhs = False)
-        
-        # solve
-        dl.solve(self.lhs, self.u_fn.vector(), self.rhs)
+        self.assemble(assemble_lhs=True, assemble_rhs=False)
 
-        return self.function_to_vertex(self.u_fn, u, is_m = False)
+        self.u_fn.x.petsc_vec.set(0.0)
+        self._setup_solver()
+        self._ksp.solve(self.rhs, self.u_fn.x.petsc_vec)
+        self._update_ghosts(self.u_fn)
 
-    def samplePrior(self, m = None, transform_m = False):
+        return self.function_to_vertex(self.u_fn, u, is_m=False)
+
+    def samplePrior(self, m=None, transform_m=False):
         if transform_m:
-            self.m_transformed = self.transform_gaussian_pointwise(self.prior_sampler()[0], self.m_transformed)
+            w, _ = self.prior_sampler()
+            self.m_transformed = self.transform_gaussian_pointwise(
+                w, self.m_transformed
+            )
         else:
             self.m_transformed = self.prior_sampler()[0]
 
         if m is None:
             return self.m_transformed.copy()
-        else:
-            m = self.m_transformed.copy()
-            return m
-        
-        
+        m = self.m_transformed.copy()
+        return m

@@ -48,18 +48,19 @@ def field_plot(ax, fn_nodal_values, nodes, elements = None, dim = 2, \
     if dof_per_node == 0:
         raise ValueError("Number of dofs per node is zero")
 
+    # Vector layout matches FEniCSx P1: [u_x(v0), u_y(v0), u_x(v1), u_y(v1), ...]
+    values_at_nodes = (
+        fn_nodal_values.reshape(num_nodes, dof_per_node)
+        if dof_per_node > 1
+        else fn_nodal_values[:, None]
+    )
+
     # Compute magnitude of the field
     plot_C = None
     if dof_per_node == 1:
         plot_C = np.sqrt(fn_nodal_values[:]**2) if plot_absolute else fn_nodal_values[:]
     else:
-        for i in range(dof_per_node):
-            if i == 0:
-                plot_C = fn_nodal_values[i*num_nodes:(i+1)*num_nodes]**2
-            else:
-                plot_C += fn_nodal_values[i*num_nodes:(i+1)*num_nodes]**2
-
-        plot_C = np.sqrt(plot_C)
+        plot_C = np.sqrt(np.sum(values_at_nodes**2, axis=1))
 
     # do we warp the configuration of domain (i.e., displace the nodal coordinates)?
     nodes_def = nodes.copy()
@@ -68,8 +69,8 @@ def field_plot(ax, fn_nodal_values, nodes, elements = None, dim = 2, \
             raise ValueError("Expected a vector function")
 
         if add_displacement_to_nodes:
-            nodes_def[:, 0] = nodes[:, 0] + fn_nodal_values[0:num_nodes]
-            nodes_def[:, 1] = nodes[:, 1] + fn_nodal_values[num_nodes:2*num_nodes]
+            nodes_def[:, 0] = nodes[:, 0] + values_at_nodes[:, 0]
+            nodes_def[:, 1] = nodes[:, 1] + values_at_nodes[:, 1]
 
     if dbg_log:
         print('nodes_def.shape = {}'.format(nodes_def.shape))
