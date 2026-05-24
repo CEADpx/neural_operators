@@ -21,3 +21,6 @@ dependencies:
     - h5py
     - pygmsh
     - pyvista[all,trame]
+variables:
+  # PyTorch + conda OpenMP on macOS (avoid kernel abort in NN notebooks)
+  KMP_DUPLICATE_LIB_OK: "TRUE"
