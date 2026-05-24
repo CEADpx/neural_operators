@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+__pycache__
+*/__pycache__
+*/__pycache__/*
+
 # C extensions
 *.so
 
@@ -164,3 +168,21 @@ cython_debug/
 # custom directories and files
 scratch/
 src/prior/test_prior_sampler/
+
+# from mac
+._*
+*/._*
+
+.DS_Store
+*/.DS_Store/*
+
+.ipynb_checkpoints
+*/.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# ide directory
+.vscode
+
+# TEMPORARY (REVERT AFTER FINALIZING PORT)
+setup/
+misc/

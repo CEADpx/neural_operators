@@ -1,4 +1,47 @@
+from pathlib import Path
+
 import numpy as np
+
+MESH_DIR = Path(__file__).resolve().parents[2] / "setup/fenicsx_test/meshes"
+
+
+def legacy_unit_square_mesh_path(nx: int = 50, ny: int = 50) -> Path:
+    """Path to XDMF mesh exported from legacy ``UnitSquareMesh(nx, ny)``."""
+    return MESH_DIR / f"unit_square_{nx}x{ny}.xdmf"
+
+
+def load_legacy_unit_square_mesh(comm, nx: int = 50, ny: int = 50):
+    """
+    Load the unit-square mesh exported from legacy FEniCS ``UnitSquareMesh``.
+
+    Vertex numbering may differ from legacy DOF order; use
+    ``legacy_dof_permutation`` when comparing index-wise with legacy outputs.
+    """
+    from dolfinx import io
+
+    path = legacy_unit_square_mesh_path(nx, ny)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Legacy mesh not found at {path}. "
+            "Run `conda activate neuralop && "
+            "python setup/fenicsx_test/export_legacy_mesh.py` first."
+        )
+    with io.XDMFFile(comm, path, "r") as xdmf:
+        return xdmf.read_mesh()
+
+
+def legacy_dof_permutation(legacy_coords, fenicsx_coords):
+    """
+    Map legacy vertex indices to FEniCSx DOF indices by matching coordinates.
+
+    ``fenicsx_array[perm[i]] = legacy_array[i]`` for nodal data aligned with
+    legacy ``UnitSquareMesh`` vertex numbering.
+    """
+    from scipy.spatial import cKDTree
+
+    _, fenicsx_idx_for_legacy = cKDTree(fenicsx_coords[:, :2]).query(legacy_coords)
+    return fenicsx_idx_for_legacy.astype(int)
+
 
 def get_dirichlet_bc(bdry_fn, x):
     boundary_nodes = []
