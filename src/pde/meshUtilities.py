@@ -43,6 +43,24 @@ def legacy_dof_permutation(legacy_coords, fenicsx_coords):
     return fenicsx_idx_for_legacy.astype(int)
 
 
+def mesh_cells(domain):
+    """Return (n_cells, n_vertices_per_cell) connectivity in geometry vertex indices."""
+    topology = domain.topology
+    tdim = topology.dim
+    topology.create_connectivity(tdim, 0)
+    c_to_v = topology.connectivity(tdim, 0)
+    n_cells = topology.index_map(tdim).size_local
+    return np.array([c_to_v.links(i) for i in range(n_cells)])
+
+
+def write_mesh_xdmf(domain, path, comm):
+    """Write a dolfinx mesh to XDMF (``path`` should end in ``.xdmf``)."""
+    from dolfinx import io
+
+    with io.XDMFFile(comm, path, "w") as xdmf:
+        xdmf.write_mesh(domain)
+
+
 def get_dirichlet_bc(bdry_fn, x):
     boundary_nodes = []
 
