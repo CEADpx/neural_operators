@@ -22,7 +22,8 @@ class PDEModel:
         self.Vu = Vu
 
         self.mesh = self.Vm.mesh
-        self.m_nodes = self.mesh.geometry.x
+        gdim = self.mesh.geometry.dim
+        self.m_nodes = self.mesh.geometry.x[:, :gdim].copy()
         self.u_nodes = self.m_nodes
 
         # vertex to dof vector and dof vector to vertex maps
