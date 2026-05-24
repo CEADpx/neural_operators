@@ -72,7 +72,7 @@ class PoissonModel(PDEModel):
 
     @staticmethod
     def _dirichlet_boundary(x):
-        """Left, bottom, and top boundaries — exclude the right edge (legacy ``boundaryU``)."""
+        """Left, bottom, and top boundaries — exclude the right edge."""
         tol = 1e-10
         not_right = x[0] < 1.0 - tol
         return not_right & (
@@ -174,5 +174,5 @@ class PoissonModel(PDEModel):
 
         if m is None:
             return self.m_transformed.copy()
-        m[:] = self.m_transformed
+        m = self.m_transformed.copy()
         return m
