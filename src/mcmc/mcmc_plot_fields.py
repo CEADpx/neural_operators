@@ -9,12 +9,16 @@ sys.path.append(src_path + 'plotting')
 from field_plot import field_plot
 from point_plot import point_plot
 
-def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = None, params = None):
+def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = None, params = None, surrogate_to_use = None):
 
     fs = 25 if params is None else params['fs']
     figsize = (20, 12) if params is None else params['figsize']
     y_sup_title = 1.075 if params is None else params['y_sup_title']
     ttl_pad = 10 if params is None else params['ttl_pad']
+    # horizontal title position per column (axes coords); nudge long m, u labels right
+    title_x = [0.6, 0.65, 0.65, 0.6]
+    if params is not None and 'title_x' in params:
+        title_x = params['title_x']
 
     model, x_obs = mcmc.model, mcmc.x_obs
 
@@ -50,20 +54,28 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
     uvec = [[w_true, m_true, u_true, u_obs], \
             [w_sample, m_sample, u_sample, u_sample_obs], \
             [w_mean, m_mean, u_mean, u_mean_obs]]
+
+    # adjust F for surrogate model
+    F_m_true_str = r'$u_{true} = F(m_{true})$'
+    F_m_sample_str = r'$u_{sample} = F(m_{sample})$'
+    F_m_mean_str = r'$u_{mean} = F(m_{mean})$'
+    if surrogate_to_use is not None:
+        F_m_sample_str = r'$u_{{sample}} = F_{{{}}}(m_{{sample}})$'.format(surrogate_to_use)
+        F_m_mean_str = r'$u_{{mean}} = F_{{{}}}(m_{{mean}})$'.format(surrogate_to_use)
         
-    title_vec = [ [ r'$w_{true} \sim N(0, C)$', \
+    title_vec = [ [ r'$w_{true}$', \
                     r'$m_{true} = \alpha_m\, \exp(w_{true}) + \beta_m$', \
-                    r'$u_{true} = F(m_{true})$', \
+                    F_m_true_str, \
                     r'$u_{obs}$' \
                     ], \
-                    [ r'$w_{sample} \sim N(0, C)$', \
+                    [ r'$w_{sample} \sim \mu^{{\mathrm{o}}}$', \
                     r'$m_{sample} = \alpha_m\, \exp(w_{sample}) + \beta_m$', \
-                    r'$u_{sample} = F(m_{sample})$', \
+                    F_m_sample_str, \
                     r'$u_{sample, obs}$' \
                     ], \
-                    [ r'$w_{mean} \sim N(0, C)$', \
+                    [ r'$w_{mean}$', \
                     r'$m_{mean} = \alpha_m\, \exp(w_{mean}) + \beta_m$', \
-                    r'$u_{mean} = F(m_{mean})$', \
+                    F_m_mean_str, \
                     r'$u_{mean, obs}$' \
                 ]]
 
@@ -139,7 +151,7 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
                     u1, u2 = uvec[0][j], uvec[i][j]
                     err = np.linalg.norm(u1 - u2)/np.linalg.norm(u1)
                     tt += '\n' + r'err (l2 rel) = {:.2f}%'.format(err*100)
-                axs[i,j].set_title(tt, fontsize=fs, pad=ttl_pad)
+                axs[i,j].set_title(tt, fontsize=fs, pad=ttl_pad, loc='center', x=title_x[j])
 
     fig.tight_layout()
     if sup_title is not None:
@@ -154,4 +166,4 @@ def mcmc_plot_fields(mcmc, savefilename = None, params = None):
     w_sample_i = len(mcmc.tracer.accepted_samples_m) - 1
     w_sample = mcmc.tracer.accepted_samples_m[w_sample_i]
 
-    mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = savefilename, params = params)
+    mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = savefilename, params = params, surrogate_to_use = mcmc.surrogate_to_use)
