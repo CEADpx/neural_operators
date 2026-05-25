@@ -24,7 +24,7 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
     savefilename = None, fig_pad = 1.08, cax_size = '8%', cax_pad = 0.03, \
     u = None, cmap = None, title = None, \
     plot_type = None, cbar_fmt = None, \
-    axis_off = None, is_vec = None, add_disp = None):
+    axis_off = None, is_vec = None, add_disp = None, vector_layout = None):
 
     if u is None:
         u = [[None for _ in range(cols)] for _ in range(rows)]
@@ -42,6 +42,8 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
         plot_type = [[None for _ in range(cols)] for _ in range(rows)]
     if cbar_fmt is None:
         cbar_fmt = [[None for _ in range(cols)] for _ in range(rows)]
+    if vector_layout is None:
+        vector_layout = [['mixed' for _ in range(cols)] for _ in range(rows)]
 
     return {
         'rows': rows,
@@ -65,8 +67,20 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
         'is_vec': is_vec,
         'add_disp': add_disp,
         'plot_type': plot_type,
-        'cbar_fmt': cbar_fmt
+        'cbar_fmt': cbar_fmt,
+        'vector_layout': vector_layout,
     }
+
+
+def _get_panel_vector_layout(data, i, j):
+    if 'vector_layout' in data:
+        return data['vector_layout'][i][j]
+    # backward compatibility with older vec_layout key
+    if 'vec_layout' in data:
+        layout = data['vec_layout'][i][j]
+        if layout is not None:
+            return layout
+    return 'mixed'
 
 
 def plot_mix_collection(data):
@@ -103,6 +117,7 @@ def plot_mix_collection(data):
             is_vec = data['is_vec'][i][j] if 'is_vec' in data else False
             add_disp = data['add_disp'][i][j] if 'add_disp' in data else False
             cb_fmt = data['cbar_fmt'][i][j] if 'cbar_fmt' in data else None
+            panel_vector_layout = _get_panel_vector_layout(data, i, j)
             
             ptype = data['plot_type'][i][j] if 'plot_type' in data else 'field'
             if ptype not in ['grid', 'field', 'point']:
@@ -123,23 +138,27 @@ def plot_mix_collection(data):
                         u, nodes, cmap = cmap)
                 elif ptype == 'point':
                     cbar = point_plot(axs[i,j], \
-                        u, nodes_point_plot, cmap = cmap)
+                        u, nodes_point_plot, cmap = cmap, \
+                        vector_layout = panel_vector_layout)
             else:
                 if ptype == 'grid':
                     cbar = field_plot_grid(axs[i,j], \
                         u, grid_x, grid_y, cmap = cmap, \
                         is_displacement = True, \
-                        add_displacement_to_nodes = add_disp)
+                        add_displacement_to_nodes = add_disp, \
+                        vector_layout = panel_vector_layout)
                 elif ptype == 'field':
                     cbar = field_plot(axs[i,j], \
                         u, nodes, cmap = cmap, \
                         is_displacement = True, \
-                        add_displacement_to_nodes = add_disp)
+                        add_displacement_to_nodes = add_disp, \
+                        vector_layout = panel_vector_layout)
                 elif ptype == 'point':
                     cbar = point_plot(axs[i,j], \
                         u, nodes_point_plot, cmap = cmap, \
                         is_displacement = True, \
-                        add_displacement_to_nodes = add_disp)
+                        add_displacement_to_nodes = add_disp, \
+                        vector_layout = panel_vector_layout)
 
             divider = make_axes_locatable(axs[i,j])
             cax = divider.append_axes('right', size=cax_size, pad=cax_pad)
@@ -166,17 +185,36 @@ def plot_collection(uvec, rows, cols, nodes, \
                     cmapvec = None, fs = 20, \
                     figsize = (20, 20), \
                     y_sup_title = 1.025, \
-                    savefilename = None):
+                    savefilename = None, \
+                    is_displacement = None, \
+                    add_displacement_to_nodes = None, \
+                    vector_layout = None):
 
     fig, axs = plt.subplots(rows, cols, figsize=figsize)
     axs = np.array([axs]) if rows == 1 else axs
 
+    if is_displacement is None:
+        is_displacement = [[False for _ in range(cols)] for _ in range(rows)]
+    if add_displacement_to_nodes is None:
+        add_displacement_to_nodes = [[False for _ in range(cols)] for _ in range(rows)]
+    if vector_layout is None:
+        vector_layout = [['mixed' for _ in range(cols)] for _ in range(rows)]
+
     for i in range(rows):
         for j in range(cols):
             
-            cbar = field_plot(axs[i,j], \
+            if is_displacement[i][j]:
+                cbar = field_plot(axs[i,j], \
                     uvec[i][j], \
-                    nodes, cmap = cmapvec[i][j] if cmapvec is not None else 'jet')
+                    nodes, cmap = cmapvec[i][j] if cmapvec is not None else 'jet', \
+                    is_displacement = True, \
+                    add_displacement_to_nodes = add_displacement_to_nodes[i][j], \
+                    vector_layout = vector_layout[i][j])
+            else:
+                cbar = field_plot(axs[i,j], \
+                    uvec[i][j], \
+                    nodes, cmap = cmapvec[i][j] if cmapvec is not None else 'jet', \
+                    vector_layout = vector_layout[i][j])
             divider = make_axes_locatable(axs[i,j])
             cax = divider.append_axes('right', size='8%', pad=0.03)
             cax.tick_params(labelsize=fs)
@@ -199,18 +237,38 @@ def plot_collection_grid(uvec, rows, cols, grid_x, grid_y, \
                     cmapvec = None, fs = 20, \
                     figsize = (20, 20), \
                     y_sup_title = 1.025, \
-                    savefilename = None):
+                    savefilename = None, \
+                    is_displacement = None, \
+                    add_displacement_to_nodes = None, \
+                    vector_layout = None):
 
     fig, axs = plt.subplots(rows, cols, figsize=figsize)
     axs = np.array([axs]) if rows == 1 else axs
 
+    if is_displacement is None:
+        is_displacement = [[False for _ in range(cols)] for _ in range(rows)]
+    if add_displacement_to_nodes is None:
+        add_displacement_to_nodes = [[False for _ in range(cols)] for _ in range(rows)]
+    if vector_layout is None:
+        vector_layout = [['mixed' for _ in range(cols)] for _ in range(rows)]
+
     for i in range(rows):
         for j in range(cols):
             
-            cbar = field_plot_grid(axs[i,j], \
+            if is_displacement[i][j]:
+                cbar = field_plot_grid(axs[i,j], \
                     uvec[i][j], \
                     grid_x, grid_y, \
-                    cmap = cmapvec[i][j] if cmapvec is not None else 'jet')
+                    cmap = cmapvec[i][j] if cmapvec is not None else 'jet', \
+                    is_displacement = True, \
+                    add_displacement_to_nodes = add_displacement_to_nodes[i][j], \
+                    vector_layout = vector_layout[i][j])
+            else:
+                cbar = field_plot_grid(axs[i,j], \
+                    uvec[i][j], \
+                    grid_x, grid_y, \
+                    cmap = cmapvec[i][j] if cmapvec is not None else 'jet', \
+                    vector_layout = vector_layout[i][j])
             divider = make_axes_locatable(axs[i,j])
             cax = divider.append_axes('right', size='8%', pad=0.03)
             cax.tick_params(labelsize=fs)

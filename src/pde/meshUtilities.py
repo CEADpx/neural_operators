@@ -80,6 +80,30 @@ def get_grid_dirichlet_bc(bdry_fn, x, y):
         
     return np.array(boundary_nodes)
 
+
+def interpolate_mixed_vector_to_grid(nodes, u, grid_x, grid_y, u_comps=2, method='linear'):
+    """
+    Interpolate a FEniCSx mixed mesh vector to a regular grid.
+
+    Mesh layout (mixed): [u_x(v0), u_y(v0), u_x(v1), u_y(v1), ...]
+    Grid layout: grid_u[i, j, c] is component c at grid point (i, j)
+    Flat mixed: grid_u.reshape(-1) gives [ux0, uy0, ux1, uy1, ...]
+    """
+    from scipy.interpolate import griddata
+
+    num_nodes = nodes.shape[0]
+    u_xy = u.reshape(num_nodes, u_comps)
+    return np.stack(
+        [griddata(nodes, u_xy[:, c], (grid_x, grid_y), method=method) for c in range(u_comps)],
+        axis=-1,
+    )
+
+
+def apply_grid_vector_dirichlet_bc(grid_u, boundary_ij, value=0.0):
+    """Set all vector components to value at grid Dirichlet points."""
+    grid_u[boundary_ij[:, 0], boundary_ij[:, 1], :] = value
+    return grid_u
+
 def test_dirichlet_bc_functions():
 
     # define example boundary function

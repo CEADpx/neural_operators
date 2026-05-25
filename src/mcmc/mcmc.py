@@ -98,14 +98,14 @@ class MCMC:
     def state_to_obs(self, u):
         if self.u_comps == 1:
             return griddata(self.u_nodes, u, self.x_obs, method='linear')
-        else:
-            num_nodes = self.u_nodes.shape[0]
-            num_grid_nodes = self.x_obs.shape[0]
-            obs = np.zeros(num_grid_nodes*2)
-            for i in range(self.u_comps):
-                obs[i*num_grid_nodes:(i+1)*num_grid_nodes] = griddata(self.u_nodes, u[i*num_nodes:(i+1)*num_nodes], self.x_obs, method='linear')
-            
-            return obs
+        num_nodes = self.u_nodes.shape[0]
+        u_xy = u.reshape(num_nodes, self.u_comps)
+        obs_components = [
+            griddata(self.u_nodes, u_xy[:, i], self.x_obs, method='linear')
+            for i in range(self.u_comps)
+        ]
+        # FEniCSx mixed layout: [ux(obs0), uy(obs0), ux(obs1), uy(obs1), ...]
+        return np.column_stack(obs_components).reshape(-1)
     
     def logLikelihood(self, current):
         current.u = self.solveFwd(current)

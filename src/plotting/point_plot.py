@@ -3,25 +3,19 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
 
+from field_plot import vector_values_at_nodes
+
 
 def point_plot(ax, nodal_values, nodes, \
                 cmap = None, \
                 plot_absolute = False, \
                 add_displacement_to_nodes = False, \
-                is_displacement = False):
+                is_displacement = False, \
+                vector_layout = 'mixed'):
 
     num_nodes = nodes.shape[0]
-    num_fn_values = nodal_values.shape[0]
-
-    dof_per_node = num_fn_values // num_nodes
-    if dof_per_node == 0:
-        raise ValueError("Number of dofs per node is zero")
-
-    # FEniCSx P1 vector layout: [u_x(v0), u_y(v0), u_x(v1), u_y(v1), ...]
-    values_at_nodes = (
-        nodal_values.reshape(num_nodes, dof_per_node)
-        if dof_per_node > 1
-        else nodal_values[:, None]
+    values_at_nodes, dof_per_node = vector_values_at_nodes(
+        nodal_values, num_nodes, vector_layout=vector_layout
     )
 
     # Compute magnitude of the field
@@ -50,6 +44,7 @@ def quick_point_plot(nodal_values, nodes, \
                     cmap = None, \
                         add_displacement_to_nodes = False, \
                         is_displacement = False, \
+                        vector_layout = 'mixed', \
                     fs = 20, \
                     figsize = (8, 8),
                     axis_off = False, \
@@ -62,9 +57,11 @@ def quick_point_plot(nodal_values, nodes, \
     if is_displacement:
         cbar = point_plot(ax, nodal_values, nodes, cmap = cmap, 
                           is_displacement = is_displacement,
-                          add_displacement_to_nodes = add_displacement_to_nodes)
+                          add_displacement_to_nodes = add_displacement_to_nodes,
+                          vector_layout = vector_layout)
     else:
-        cbar = point_plot(ax, nodal_values, nodes, cmap = cmap)
+        cbar = point_plot(ax, nodal_values, nodes, cmap = cmap,
+                          vector_layout = vector_layout)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size='8%', pad=0.03)
     cax.tick_params(labelsize=20)
