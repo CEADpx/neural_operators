@@ -291,7 +291,10 @@ class MCMC:
 
         # compare true and posterior mean fields
         pp = self.pp_params['field_plot']
-        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_iter_{}.png'.format(i), params = pp)
+        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_surrogate_F_for_u_iter_{}.png'.format(i), \
+            params = pp, use_surrogate_F_for_u = True)
+        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_true_F_for_u_iter_{}.png'.format(i), \
+            params = pp, use_surrogate_F_for_u = False)
 
     def save(self, i, current, accept):
         # save tracer

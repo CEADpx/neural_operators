@@ -9,7 +9,7 @@ sys.path.append(src_path + 'plotting')
 from field_plot import field_plot
 from point_plot import point_plot
 
-def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = None, params = None, surrogate_to_use = None):
+def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = None, params = None, surrogate_to_use = None, use_surrogate_F_for_u = False):
 
     fs = 25 if params is None else params['fs']
     figsize = (20, 12) if params is None else params['figsize']
@@ -23,11 +23,16 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
     model, x_obs = mcmc.model, mcmc.x_obs
 
     m_mean = mcmc.model.transform_gaussian_pointwise(w_mean)
-    u_mean = mcmc.model.solveFwd(u = None, m = m_mean, transform_m = False)
-    
+    if not use_surrogate_F_for_u:
+        u_mean = mcmc.model.solveFwd(u = None, m = m_mean, transform_m = False)
+    else:
+        u_mean = mcmc.surrogate_models[mcmc.surrogate_to_use].solveFwd(w_mean)  
     
     m_sample = mcmc.model.transform_gaussian_pointwise(w_sample)
-    u_sample = mcmc.model.solveFwd(u = None, m = m_sample, transform_m = False)
+    if not use_surrogate_F_for_u:
+        u_sample = mcmc.model.solveFwd(u = None, m = m_sample, transform_m = False)
+    else:
+        u_sample = mcmc.surrogate_models[mcmc.surrogate_to_use].solveFwd(w_sample)
 
     u_mean_obs = mcmc.state_to_obs(u_mean)
     u_sample_obs = mcmc.state_to_obs(u_sample)
@@ -59,7 +64,7 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
     F_m_true_str = r'$u_{true} = F(m_{true})$'
     F_m_sample_str = r'$u_{sample} = F(m_{sample})$'
     F_m_mean_str = r'$u_{mean} = F(m_{mean})$'
-    if surrogate_to_use is not None:
+    if surrogate_to_use is not None and use_surrogate_F_for_u:
         F_m_sample_str = r'$u_{{sample}} = F_{{{}}}(m_{{sample}})$'.format(surrogate_to_use)
         F_m_mean_str = r'$u_{{mean}} = F_{{{}}}(m_{{mean}})$'.format(surrogate_to_use)
         
@@ -160,10 +165,11 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
         plt.savefig(savefilename,  bbox_inches='tight')
     plt.show()
 
-def mcmc_plot_fields(mcmc, savefilename = None, params = None):
+def mcmc_plot_fields(mcmc, savefilename = None, params = None, use_surrogate_F_for_u = False):
 
     w_mean = mcmc.tracer.accepted_samples_mean_m
     w_sample_i = len(mcmc.tracer.accepted_samples_m) - 1
     w_sample = mcmc.tracer.accepted_samples_m[w_sample_i]
 
-    mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = savefilename, params = params, surrogate_to_use = mcmc.surrogate_to_use)
+    mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = savefilename, \
+        params = params, surrogate_to_use = mcmc.surrogate_to_use, use_surrogate_F_for_u = use_surrogate_F_for_u)
