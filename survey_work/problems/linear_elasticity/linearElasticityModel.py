@@ -26,12 +26,14 @@ class LinearElasticityModel(PDEModel):
         prior_sampler,
         logn_scale=1.0,
         logn_translate=0.0,
-        seed=0,
+        nu=0.45,
+        seed=0
     ):
         super().__init__(Vm, Vu, prior_sampler, seed)
 
         self.logn_scale = logn_scale
         self.logn_translate = logn_translate
+        self.nu = nu
 
         domain = self.mesh
         qd = {"quadrature_degree": 4}
@@ -45,7 +47,9 @@ class LinearElasticityModel(PDEModel):
         ds = ufl.Measure("ds", domain=domain, metadata=qd)
 
         self.b = ufl.as_vector((0.0, 0.0))
-        self.t = ufl.as_vector((0.0, 10.0))
+        self._traction_x = fem.Constant(domain, default_scalar_type(20.0))
+        self._traction_y = fem.Constant(domain, default_scalar_type(50.0))
+        self.t = ufl.as_vector((self._traction_x, self._traction_y))
 
         dofs = fem.locate_dofs_geometrical(Vu, self._dirichlet_boundary)
         zero = np.zeros(2, dtype=default_scalar_type)
@@ -62,7 +66,6 @@ class LinearElasticityModel(PDEModel):
         self.u_trial = ufl.TrialFunction(self.Vu)
         self.u_test = ufl.TestFunction(self.Vu)
 
-        self.nu = 0.25
         self.lam_fact = self.nu / ((1 + self.nu) * (1 - 2 * self.nu))
         self.mu_fact = 1.0 / (2 * (1 + self.nu))
 
@@ -132,6 +135,11 @@ class LinearElasticityModel(PDEModel):
             self._ksp.setType(PETSc.KSP.Type.PREONLY)
             self._ksp.getPC().setType(PETSc.PC.Type.LU)
         self._ksp.setOperators(self.lhs)
+
+    def set_traction(self, tx, ty):
+        self._traction_x.value = tx
+        self._traction_y.value = ty
+        self.assemble(assemble_lhs=False, assemble_rhs=True)
 
     def assemble(self, assemble_lhs=True, assemble_rhs=True):
         self._compile_forms()
