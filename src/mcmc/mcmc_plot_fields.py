@@ -101,20 +101,19 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
     if params is not None and 'sup_title' in params:
         sup_title = params['sup_title']
 
-    # fs = 25
-    # y_sup_title = 1.075
-
-    
-
+    uobs_xlim, uobs_ylim = None, None
+    if u_vec_plot:
+        u_xy = u_obs.reshape(-1, 2)
+        x_warp = x_obs + u_xy
+        pad = 0.08
+        dx = x_warp[:, 0].max() - x_warp[:, 0].min()
+        dy = x_warp[:, 1].max() - x_warp[:, 1].min()
+        uobs_xlim = [x_warp[:, 0].min() - pad * dx, x_warp[:, 0].max() + pad * dx]
+        uobs_ylim = [x_warp[:, 1].min() - pad * dy, x_warp[:, 1].max() + pad * dy]
 
     for i in range(rows):
         for j in range(cols):
 
-            # add grid points
-            if j == 3:
-                axs[i,j].set_xlim([-0.1, 1.1])
-                axs[i,j].set_ylim([-0.1, 1.1])
-            
             if j < 3:
                 if j < 2:
                     cbar = field_plot(axs[i,j], \
@@ -133,11 +132,15 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
             else:
                 uob = uvec[i][j]
                 if u_vec_plot == False:
-                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i]
-                    [j])
+                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i][j])
+                    axs[i, j].set_xlim([-0.1, 1.1])
+                    axs[i, j].set_ylim([-0.1, 1.1])
                 else:
-                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i]
-                    [j], is_displacement = True, add_displacement_to_nodes = True)
+                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i][j], \
+                        is_displacement = True, add_displacement_to_nodes = True)
+                    axs[i, j].set_xlim(uobs_xlim)
+                    axs[i, j].set_ylim(uobs_ylim)
+                    axs[i, j].set_aspect('equal')
 
             divider = make_axes_locatable(axs[i,j])
             cax = divider.append_axes('right', size='8%', pad=0.03)
