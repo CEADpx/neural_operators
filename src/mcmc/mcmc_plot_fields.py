@@ -23,16 +23,17 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
     model, x_obs = mcmc.model, mcmc.x_obs
 
     m_mean = mcmc.model.transform_gaussian_pointwise(w_mean)
-    if not use_surrogate_F_for_u:
-        u_mean = mcmc.model.solveFwd(u = None, m = m_mean, transform_m = False)
+    if use_surrogate_F_for_u and mcmc.surrogate_to_use is not None:
+        # use mcmc solveFwd method (duplicate it as we don't have 'current' object in this function)
+        u_mean = mcmc.surrogate_models[mcmc.surrogate_to_use].solveFwd(w_mean)
     else:
-        u_mean = mcmc.surrogate_models[mcmc.surrogate_to_use].solveFwd(w_mean)  
+        u_mean = mcmc.model.solveFwd(u = None, m = m_mean, transform_m = False)
     
     m_sample = mcmc.model.transform_gaussian_pointwise(w_sample)
-    if not use_surrogate_F_for_u:
-        u_sample = mcmc.model.solveFwd(u = None, m = m_sample, transform_m = False)
-    else:
+    if use_surrogate_F_for_u and mcmc.surrogate_to_use is not None:
         u_sample = mcmc.surrogate_models[mcmc.surrogate_to_use].solveFwd(w_sample)
+    else:
+        u_sample = mcmc.model.solveFwd(u = None, m = m_sample, transform_m = False)
 
     u_mean_obs = mcmc.state_to_obs(u_mean)
     u_sample_obs = mcmc.state_to_obs(u_sample)
