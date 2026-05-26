@@ -26,14 +26,13 @@ class LinearElasticityModel(PDEModel):
         prior_sampler,
         logn_scale=1.0,
         logn_translate=0.0,
-        nu=0.45,
         seed=0
     ):
         super().__init__(Vm, Vu, prior_sampler, seed)
 
         self.logn_scale = logn_scale
         self.logn_translate = logn_translate
-        self.nu = nu
+        self.nu = 0.45
 
         domain = self.mesh
         qd = {"quadrature_degree": 4}

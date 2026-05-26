@@ -32,24 +32,18 @@ class HyperelasticityModel(PDEModel):
         prior_sampler,
         logn_scale=1.0,
         logn_translate=0.0,
-        nu=0.45,
-        newton_rtol=1e-8,
-        newton_atol=1e-8,
-        newton_max_it=50,
-        reset_u=True,
-        n_load_steps=20,
-        seed=0,
+        seed=0
     ):
         super().__init__(Vm, Vu, prior_sampler, seed)
 
         self.logn_scale = logn_scale
         self.logn_translate = logn_translate
-        self.nu = nu
-        self.newton_rtol = newton_rtol
-        self.newton_atol = newton_atol
-        self.newton_max_it = newton_max_it
-        self.reset_u = reset_u
-        self.n_load_steps = n_load_steps
+        self.nu = 0.45
+        self.newton_rtol = 1e-8
+        self.newton_atol = 1e-8
+        self.newton_max_it = 50
+        self.reset_u = True
+        self.n_load_steps = 20
 
         domain = self.mesh
         qd = {"quadrature_degree": 4}
