@@ -29,26 +29,28 @@ def get_surrogate_specs(name, data_prefix, model_path):
         model_file = os.path.join(model_path, name, "Results", "model.pkl")
         load_data_and_model = load_data_and_fno
 
-    return {
-        'data_file': data_file,
-        'model_file': model_file,
-        'load_data_and_model': load_data_and_model
-    }
+    return data_file, model_file, load_data_and_model
 
-def load_surrogate_model(name, data_prefix, model_path, model, u_comps=None):
-    spec = get_surrogate_specs(name, data_prefix, model_path)
+def load_data_and_model(name, data_prefix, model_path):
+    df, mf, ldam = get_surrogate_specs(name, data_prefix, model_path)
     
     missing = []
-    if not os.path.isfile(spec['data_file']):
-        missing.append(('data', spec['data_file']))
-    if not os.path.isfile(spec['model_file']):
-        missing.append(('model', spec['model_file']))
+    if not os.path.isfile(df):
+        missing.append(('data', df))
+    if not os.path.isfile(mf):
+        missing.append(('model', mf))
     if missing:
         for kind, path in missing:
-            print('{} surrogate not loaded; missing {} file: {}'.format(name, kind, path))
+            print('{} model not loaded; missing {} file: {}'.format(name, kind, path))
         return None
 
-    data, nn = spec['load_data_and_model'](spec['data_file'], spec['model_file'])
+    data, nn = ldam(df, mf)
+    return data, nn
+
+def load_surrogate_model(name, data_prefix, model_path, model, u_comps=None):
+    
+    data, nn = load_data_and_model(name, data_prefix, model_path)
+
     if name == 'FNO':
         u_nodes = model.u_nodes
         grid_x = data.grid_x_test[0, :, :, 0]
