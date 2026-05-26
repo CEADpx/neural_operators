@@ -32,6 +32,7 @@ def get_surrogate_specs(name, data_prefix, model_path):
     return data_file, model_file, load_data_and_model
 
 def load_data_and_model(name, data_prefix, model_path):
+    
     df, mf, ldam = get_surrogate_specs(name, data_prefix, model_path)
     
     missing = []
@@ -44,12 +45,13 @@ def load_data_and_model(name, data_prefix, model_path):
             print('{} model not loaded; missing {} file: {}'.format(name, kind, path))
         return None
 
-    data, nn = ldam(df, mf)
-    return data, nn
+    return ldam(df, mf)
 
 def load_surrogate_model(name, data_prefix, model_path, model, u_comps=None):
-    
-    data, nn = load_data_and_model(name, data_prefix, model_path)
+    loaded = load_data_and_model(name, data_prefix, model_path)
+    if loaded is None:
+        return None
+    data, nn = loaded
 
     if name == 'FNO':
         u_nodes = model.u_nodes
