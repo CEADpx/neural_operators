@@ -27,12 +27,12 @@ class SurrogateModel:
         return self.u
     
 class SurrogateModelFNO(SurrogateModel):
-    def __init__(self, true_model, model, data, nodes, grid_x, grid_y, u_comps=None):
+    def __init__(self, true_model, model, data, nodes, grid_x, grid_y, u_comps = 1):
         super().__init__(true_model, model, data)
         self.nodes = nodes
         self.grid_x = grid_x
         self.grid_y = grid_y
-        self.u_comps = data.num_Y_components if u_comps is None else u_comps
+        self.u_comps = u_comps
 
         self.num_nodes = len(nodes)
         self.num_grid_x = len(grid_x)
@@ -64,14 +64,13 @@ class SurrogateModelFNO(SurrogateModel):
         if self.u_comps == 1:
             interp = RegularGridInterpolator((self.grid_x[:,0], self.grid_y[0,:]), u[:, :, 0])
             return interp(self.nodes)
-
-        u_at_nodes = np.zeros((self.num_nodes, self.u_comps))
-        for i in range(self.u_comps):
-            interp = RegularGridInterpolator((self.grid_x[:,0], self.grid_y[0,:]), u[:, :, i])
-            u_at_nodes[:, i] = interp(self.nodes)
-
-        # FEniCSx mixed layout: [ux(v0), uy(v0), ux(v1), uy(v1), ...]
-        return u_at_nodes.reshape(-1)
+        else:
+            u_interp = np.zeros(self.u_comps*self.num_nodes)
+            for i in range(self.u_comps):
+                interp = RegularGridInterpolator((self.grid_x[:,0], self.grid_y[0,:]), u[:, :, i])
+                u_interp[i*self.num_nodes:(i+1)*self.num_nodes] = interp(self.nodes)
+            
+            return u_interp
                 
     def solveFwd(self, w):
         if self.model_type == 'FNO':
