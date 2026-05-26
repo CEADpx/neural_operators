@@ -32,13 +32,13 @@ class HyperelasticityModel(PDEModel):
         prior_sampler,
         logn_scale=1.0,
         logn_translate=0.0,
-        seed=0,
         nu=0.45,
         newton_rtol=1e-8,
         newton_atol=1e-8,
         newton_max_it=50,
         reset_u=True,
         n_load_steps=20,
+        seed=0,
     ):
         super().__init__(Vm, Vu, prior_sampler, seed)
 
@@ -83,9 +83,7 @@ class HyperelasticityModel(PDEModel):
 
         mu = self.m_fn / (2.0 * (1.0 + self.nu))
         lam = self.m_fn * self.nu / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu))
-        # Stable compressible Neo-Hookean (neoHookean2 in fenics-demo phase-field code).
-        # The J^(-2/3) deviatoric split can admit spurious equilibria near |u|~0.1
-        # at tiny traction when u=0 is used as the Newton initial guess.
+        # Stable compressible Neo-Hookean
         W = (mu / 2.0) * (Ic - 3.0 - 2.0 * ufl.ln(J)) + (lam / 2.0) * (ufl.ln(J)) ** 2
         P = ufl.diff(W, F)
 

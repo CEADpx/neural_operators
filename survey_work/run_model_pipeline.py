@@ -27,6 +27,10 @@ MODELS = {
         "problem_dir": "problems/linear_elasticity",
         "bayes_dir": "applications/bayesian_inverse_problem_linear_elasticity",
     },
+    "hyperelasticity": {
+        "problem_dir": "problems/hyperelasticity",
+        "bayes_dir": "applications/bayesian_inverse_problem_hyperelasticity",
+    },
 }
 
 NOP_NAMES = ("DeepONet", "PCANet", "FNO")
@@ -116,7 +120,7 @@ def parse_args():
     parser.add_argument(
         "model",
         choices=sorted(MODELS),
-        help="Problem name: poisson or linear_elasticity",
+        help="Problem name: poisson, linear_elasticity, or hyperelasticity",
     )
     parser.add_argument(
         "--skip-training",
