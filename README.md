@@ -22,7 +22,7 @@ This directory contains various methods and classes used in `survey_work`. It tr
 This directory contains the scripts, notebooks, and results for the neural oeprator survey article. Key files and directories in this directory are as follows
 
 #### [survey_work/problems](survey_work/problems) 
-Neural operators are applied to Poisson and Linear Elasticity problems. This directory contains the notebooks used to generate data and train and test three neural operators, `DeepONet`, `PCANet`, and `FNO`.
+Neural operators are applied to Poisson, linear elasticity, and hyperelasticity problems. This directory contains the notebooks used to generate data and train and test three neural operators, `DeepONet`, `PCANet`, and `FNO`.
 
 #### [survey_work/applications](survey_work/applications) 
 
