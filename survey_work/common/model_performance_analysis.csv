@@ -1,0 +1,13 @@
+Model,Problem,NumParams,IDErr,OODErr,BayesErr
+True,Poisson,,,,29.5
+DeepONet,Poisson,188040,1.3,172.0,39.7
+PCANet,Poisson,180700,0.9,184.5,43.4
+FNO,Poisson,187485,0.6,124.2,37.6
+True,LinearElasticity,,,,29.5
+DeepONet,LinearElasticity,194540,1.3,172.0,39.7
+PCANet,LinearElasticity,180700,0.9,184.5,43.4
+FNO,LinearElasticity,187485,0.6,124.2,37.6
+True,Hyperelasticity,,,,29.5
+DeepONet,Hyperelasticity,194540,1.3,172.0,39.7
+PCANet,Hyperelasticity,180700,0.9,184.5,43.4
+FNO,Hyperelasticity,187485,0.6,124.2,37.6
