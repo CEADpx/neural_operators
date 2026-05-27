@@ -16,9 +16,9 @@ import csv
 import subprocess
 from pathlib import Path
 
-COMMON_DIR = Path(__file__).resolve().parent
+COMMON_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_CSV = COMMON_DIR / "model_performance_analysis.csv"
-DEFAULT_TEX = COMMON_DIR / "model_performance_table.tex"
+DEFAULT_TEX = COMMON_DIR / "tex_and_pdf/model_performance_table.tex"
 
 MODEL_ORDER = ("True", "DeepONet", "PCANet", "FNO")
 METRICS = ("NumParams", "IDErr", "OODErr", "BayesErr")
