@@ -19,6 +19,7 @@ def field_plot_fenics(ax, f, Vh, \
                       plot_absolute = False, \
                       add_displacement_to_nodes = False, \
                       is_displacement = False, \
+                      vector_layout = 'mixed', \
                       is_fn = False, dbg_log = False, **kwargs):
     
     if is_fn:
@@ -40,15 +41,18 @@ def field_plot_fenics(ax, f, Vh, \
     w0 = function_to_vertex(f_fn, None, V=Vh)
     nv = mesh.num_vertices()
 
-    U = [w0[i * nv: (i + 1) * nv] for i in range(gdim)]
-    
-    if gdim == 2:
-        if len(U[gdim - 1]) == 0:
-            U = np.array(U[0]).T
-        else:
-            U = np.array(U).T
+    if len(w0) == nv:
+        U = w0
+    elif vector_layout == 'mixed':
+        n_comps = len(w0) // nv
+        U = w0.reshape(nv, n_comps)
+    elif vector_layout == 'block':
+        n_comps = len(w0) // nv
+        U = np.column_stack([w0[i * nv:(i + 1) * nv] for i in range(n_comps)])
     else:
-        U = np.array(U).T
+        raise ValueError(
+            "vector_layout must be 'mixed' or 'block', got {!r}".format(vector_layout)
+        )
 
     n1, n2 = U.shape[0], 1 if len(U.shape) == 1 else U.shape[1]
     if dbg_log:

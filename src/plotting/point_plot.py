@@ -3,32 +3,27 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
 
+from field_plot import vector_values_at_nodes
+
 
 def point_plot(ax, nodal_values, nodes, \
                 cmap = None, \
                 plot_absolute = False, \
                 add_displacement_to_nodes = False, \
-                is_displacement = False):
+                is_displacement = False, \
+                vector_layout = 'mixed'):
 
     num_nodes = nodes.shape[0]
-    num_fn_values = nodal_values.shape[0]
-
-    dof_per_node = num_fn_values // num_nodes
-    if dof_per_node == 0:
-        raise ValueError("Number of dofs per node is zero")
+    values_at_nodes, dof_per_node = vector_values_at_nodes(
+        nodal_values, num_nodes, vector_layout=vector_layout
+    )
 
     # Compute magnitude of the field
     plot_C = None
     if dof_per_node == 1:
         plot_C = np.sqrt(nodal_values[:]**2) if plot_absolute else nodal_values[:]
     else:
-        for i in range(dof_per_node):
-            if i == 0:
-                plot_C = nodal_values[i*num_nodes:(i+1)*num_nodes]**2
-            else:
-                plot_C += nodal_values[i*num_nodes:(i+1)*num_nodes]**2
-
-        plot_C = np.sqrt(plot_C)
+        plot_C = np.sqrt(np.sum(values_at_nodes**2, axis=1))
 
     # do we warp the configuration of domain (i.e., displace the nodal coordinates)?
     nodes_def = nodes.copy()
@@ -37,8 +32,8 @@ def point_plot(ax, nodal_values, nodes, \
             raise ValueError("Expected a vector function")
 
         if add_displacement_to_nodes:
-            nodes_def[:, 0] = nodes[:, 0] + nodal_values[0:num_nodes]
-            nodes_def[:, 1] = nodes[:, 1] + nodal_values[num_nodes:2*num_nodes]
+            nodes_def[:, 0] = nodes[:, 0] + values_at_nodes[:, 0]
+            nodes_def[:, 1] = nodes[:, 1] + values_at_nodes[:, 1]
     
     cbar = ax.scatter(nodes_def[:,0], nodes_def[:,1], c = plot_C, cmap = cmap)
 
@@ -49,6 +44,7 @@ def quick_point_plot(nodal_values, nodes, \
                     cmap = None, \
                         add_displacement_to_nodes = False, \
                         is_displacement = False, \
+                        vector_layout = 'mixed', \
                     fs = 20, \
                     figsize = (8, 8),
                     axis_off = False, \
@@ -61,9 +57,11 @@ def quick_point_plot(nodal_values, nodes, \
     if is_displacement:
         cbar = point_plot(ax, nodal_values, nodes, cmap = cmap, 
                           is_displacement = is_displacement,
-                          add_displacement_to_nodes = add_displacement_to_nodes)
+                          add_displacement_to_nodes = add_displacement_to_nodes,
+                          vector_layout = vector_layout)
     else:
-        cbar = point_plot(ax, nodal_values, nodes, cmap = cmap)
+        cbar = point_plot(ax, nodal_values, nodes, cmap = cmap,
+                          vector_layout = vector_layout)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size='8%', pad=0.03)
     cax.tick_params(labelsize=20)

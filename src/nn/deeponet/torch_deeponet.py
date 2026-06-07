@@ -53,7 +53,7 @@ class DeepONet(nn.Module):
         # bias added to the product of branch and trunk networks
         self.bias = [nn.Parameter(torch.ones((1,)),requires_grad=True) for i in range(num_Y_components)]
 
-        # dimension d_o of the pointwise value of the target function (u(x) \in R^d_o)
+        # dimension d_u of the pointwise value of the target function (u(x) \in R^d_u)
         self.num_Y_components = num_Y_components
 
         # record losses
@@ -75,16 +75,17 @@ class DeepONet(nn.Module):
         X = self.convert_np_to_tensor(X)
         X_trunk = self.convert_np_to_tensor(X_trunk)
         
-        branch_out = self.branch_net.forward(X)
-        trunk_out = self.trunk_net.forward(X_trunk,final_act=True)
+        br_out = self.branch_net.forward(X)
+        tr_out = self.trunk_net.forward(X_trunk,final_act=True)
+        ntr = self.num_tr_outputs
 
         if self.num_Y_components == 1:
-            output = branch_out @ trunk_out.t() + self.bias[0]
+            output = br_out @ tr_out.t() + self.bias[0]
         else:
-            # when d_o > 1, split the branch output and compute the product
+            # if d_u > 1, split the branch output and compute the product
             output = []
             for i in range(self.num_Y_components):
-                output.append(branch_out[:,i*self.num_tr_outputs:(i+1)*self.num_tr_outputs] @ trunk_out.t() + self.bias[i])
+                output.append(br_out[:,i*ntr:(i+1)*ntr] @ tr_out.t() + self.bias[i])
             
             # stack and reshape 
             output = torch.stack(output, dim=-1)
@@ -130,6 +131,7 @@ class DeepONet(nn.Module):
         # training and testing loop
         start_time = time.perf_counter()
 
+        # number of trainable parameters in the model
         self.trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         
         print('-'*50)

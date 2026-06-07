@@ -9,21 +9,31 @@ sys.path.append(src_path + 'plotting')
 from field_plot import field_plot
 from point_plot import point_plot
 
-def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = None, params = None):
+def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = None, params = None, surrogate_to_use = None, use_surrogate_F_for_u = False):
 
     fs = 25 if params is None else params['fs']
     figsize = (20, 12) if params is None else params['figsize']
     y_sup_title = 1.075 if params is None else params['y_sup_title']
     ttl_pad = 10 if params is None else params['ttl_pad']
+    # horizontal title position per column (axes coords); nudge long m, u labels right
+    title_x = [0.6, 0.65, 0.65, 0.6]
+    if params is not None and 'title_x' in params:
+        title_x = params['title_x']
 
     model, x_obs = mcmc.model, mcmc.x_obs
 
     m_mean = mcmc.model.transform_gaussian_pointwise(w_mean)
-    u_mean = mcmc.model.solveFwd(u = None, m = m_mean, transform_m = False)
-    
+    if use_surrogate_F_for_u and mcmc.surrogate_to_use is not None:
+        # use mcmc solveFwd method (duplicate it as we don't have 'current' object in this function)
+        u_mean = mcmc.surrogate_models[mcmc.surrogate_to_use].solveFwd(w_mean)
+    else:
+        u_mean = mcmc.model.solveFwd(u = None, m = m_mean, transform_m = False)
     
     m_sample = mcmc.model.transform_gaussian_pointwise(w_sample)
-    u_sample = mcmc.model.solveFwd(u = None, m = m_sample, transform_m = False)
+    if use_surrogate_F_for_u and mcmc.surrogate_to_use is not None:
+        u_sample = mcmc.surrogate_models[mcmc.surrogate_to_use].solveFwd(w_sample)
+    else:
+        u_sample = mcmc.model.solveFwd(u = None, m = m_sample, transform_m = False)
 
     u_mean_obs = mcmc.state_to_obs(u_mean)
     u_sample_obs = mcmc.state_to_obs(u_sample)
@@ -50,21 +60,33 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
     uvec = [[w_true, m_true, u_true, u_obs], \
             [w_sample, m_sample, u_sample, u_sample_obs], \
             [w_mean, m_mean, u_mean, u_mean_obs]]
+
+    # adjust F for surrogate model
+    F_m_true_str = r'$u_{true} = F(m_{true})$'
+    F_m_sample_str = r'$u_{sample} = F(m_{sample})$'
+    F_m_mean_str = r'$u_{mean} = F(m_{mean})$'
+    if surrogate_to_use is not None and use_surrogate_F_for_u:
+        F_m_sample_str = r'$u_{{sample}} = F_{{{}}}(m_{{sample}})$'.format(surrogate_to_use)
+        F_m_mean_str = r'$u_{{mean}} = F_{{{}}}(m_{{mean}})$'.format(surrogate_to_use)
+
+    g_true_str = r'$\mathrm{g}_{true} = \bar{\mathbf{B}}(u_{true})$'
+    g_sample_str = r'$\mathrm{g}_{sample} = \bar{\mathbf{B}}(u_{sample})$'
+    g_mean_str = r'$\mathrm{g}_{mean} = \bar{\mathbf{B}}(u_{mean})$'
         
-    title_vec = [ [ r'$w_{true} \sim N(0, C)$', \
+    title_vec = [ [ r'$w_{true}$', \
                     r'$m_{true} = \alpha_m\, \exp(w_{true}) + \beta_m$', \
-                    r'$u_{true} = F(m_{true})$', \
-                    r'$u_{obs}$' \
+                    F_m_true_str, \
+                    g_true_str \
                     ], \
-                    [ r'$w_{sample} \sim N(0, C)$', \
+                    [ r'$w_{sample} \sim \mu^{{\mathrm{g}}}$', \
                     r'$m_{sample} = \alpha_m\, \exp(w_{sample}) + \beta_m$', \
-                    r'$u_{sample} = F(m_{sample})$', \
-                    r'$u_{sample, obs}$' \
+                    F_m_sample_str, \
+                    g_sample_str \
                     ], \
-                    [ r'$w_{mean} \sim N(0, C)$', \
+                    [ r'$w_{mean}$', \
                     r'$m_{mean} = \alpha_m\, \exp(w_{mean}) + \beta_m$', \
-                    r'$u_{mean} = F(m_{mean})$', \
-                    r'$u_{mean, obs}$' \
+                    F_m_mean_str, \
+                    g_mean_str \
                 ]]
 
     # get cmap from params if it exists
@@ -77,26 +99,25 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
                     for i in range(rows)]
     
     sup_title = r'Ground truth, $i^{th}$ sample' \
-            + r', and posterior mean $(w, m, u(m), u_{obs})$' \
+            + fr', and posterior mean $(w, m, u(m), \mathrm{{g}})$' \
             + r', i = {}'.format(w_sample_i)
     
     if params is not None and 'sup_title' in params:
         sup_title = params['sup_title']
 
-    # fs = 25
-    # y_sup_title = 1.075
-
-    
-
+    uobs_xlim, uobs_ylim = None, None
+    if u_vec_plot:
+        u_xy = u_obs.reshape(-1, 2)
+        x_warp = x_obs + u_xy
+        pad = 0.08
+        dx = x_warp[:, 0].max() - x_warp[:, 0].min()
+        dy = x_warp[:, 1].max() - x_warp[:, 1].min()
+        uobs_xlim = [x_warp[:, 0].min() - pad * dx, x_warp[:, 0].max() + pad * dx]
+        uobs_ylim = [x_warp[:, 1].min() - pad * dy, x_warp[:, 1].max() + pad * dy]
 
     for i in range(rows):
         for j in range(cols):
 
-            # add grid points
-            if j == 3:
-                axs[i,j].set_xlim([-0.1, 1.1])
-                axs[i,j].set_ylim([-0.1, 1.1])
-            
             if j < 3:
                 if j < 2:
                     cbar = field_plot(axs[i,j], \
@@ -115,11 +136,15 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
             else:
                 uob = uvec[i][j]
                 if u_vec_plot == False:
-                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i]
-                    [j])
+                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i][j])
+                    axs[i, j].set_xlim([-0.1, 1.1])
+                    axs[i, j].set_ylim([-0.1, 1.1])
                 else:
-                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i]
-                    [j], is_displacement = True, add_displacement_to_nodes = True)
+                    cbar = point_plot(axs[i,j], uob, x_obs, cmap = cmap_vec[i][j], \
+                        is_displacement = True, add_displacement_to_nodes = True)
+                    axs[i, j].set_xlim(uobs_xlim)
+                    axs[i, j].set_ylim(uobs_ylim)
+                    axs[i, j].set_aspect('equal')
 
             divider = make_axes_locatable(axs[i,j])
             cax = divider.append_axes('right', size='8%', pad=0.03)
@@ -139,7 +164,7 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
                     u1, u2 = uvec[0][j], uvec[i][j]
                     err = np.linalg.norm(u1 - u2)/np.linalg.norm(u1)
                     tt += '\n' + r'err (l2 rel) = {:.2f}%'.format(err*100)
-                axs[i,j].set_title(tt, fontsize=fs, pad=ttl_pad)
+                axs[i,j].set_title(tt, fontsize=fs, pad=ttl_pad, loc='center', x=title_x[j])
 
     fig.tight_layout()
     if sup_title is not None:
@@ -148,10 +173,11 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
         plt.savefig(savefilename,  bbox_inches='tight')
     plt.show()
 
-def mcmc_plot_fields(mcmc, savefilename = None, params = None):
+def mcmc_plot_fields(mcmc, savefilename = None, params = None, use_surrogate_F_for_u = False):
 
     w_mean = mcmc.tracer.accepted_samples_mean_m
     w_sample_i = len(mcmc.tracer.accepted_samples_m) - 1
     w_sample = mcmc.tracer.accepted_samples_m[w_sample_i]
 
-    mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = savefilename, params = params)
+    mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = savefilename, \
+        params = params, surrogate_to_use = mcmc.surrogate_to_use, use_surrogate_F_for_u = use_surrogate_F_for_u)

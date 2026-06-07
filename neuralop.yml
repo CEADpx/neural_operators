@@ -1,26 +1,26 @@
-# create environment `neuralop` using 
-# conda env create -f neuralop.yml
-name: neuralop
+# Create environment `neuralopv2` using:
+#   conda env create -f neuralop.yml
+name: neuralopv2
 channels:
-  - conda
   - conda-forge
 dependencies:
   - python=3.12
-  - fenics=2019.1.0
+  - fenics-dolfinx
+  - mpich
   - matplotlib
   - scipy
   - jupyter
-  - 'jupyterlab>=3'
+  - jupyterlab>=3
   - ipywidgets
-  - tensorflow
-  - jax
   - pip
   - pip:
     - torch
     - seaborn
     - meshio
     - pympler
-    - hippylib
     - h5py
     - pygmsh
     - pyvista[all,trame]
+variables:
+  # PyTorch + conda OpenMP on macOS (avoid kernel abort in NN notebooks)
+  KMP_DUPLICATE_LIB_OK: "TRUE"

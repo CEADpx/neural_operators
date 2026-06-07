@@ -98,14 +98,15 @@ class MCMC:
     def state_to_obs(self, u):
         if self.u_comps == 1:
             return griddata(self.u_nodes, u, self.x_obs, method='linear')
-        else:
-            num_nodes = self.u_nodes.shape[0]
-            num_grid_nodes = self.x_obs.shape[0]
-            obs = np.zeros(num_grid_nodes*2)
-            for i in range(self.u_comps):
-                obs[i*num_grid_nodes:(i+1)*num_grid_nodes] = griddata(self.u_nodes, u[i*num_nodes:(i+1)*num_nodes], self.x_obs, method='linear')
-            
-            return obs
+        
+        num_nodes = self.u_nodes.shape[0]
+        u_xy = u.reshape(num_nodes, self.u_comps)
+        obs_components = [
+            griddata(self.u_nodes, u_xy[:, i], self.x_obs, method='linear')
+            for i in range(self.u_comps)
+        ]
+        # FEniCSx mixed layout: [ux(obs0), uy(obs0), ux(obs1), uy(obs1), ...]
+        return np.column_stack(obs_components).reshape(-1)
     
     def logLikelihood(self, current):
         current.u = self.solveFwd(current)
@@ -124,7 +125,6 @@ class MCMC:
     
     def proposal(self, current, proposed):
         # preconditioned Crank-Nicolson
-        # self.prior.get() returns the new sample
         proposed.m, proposed.log_prior = self.prior(proposed.m)
         return self.pcn_beta * proposed.m + np.sqrt(1 - self.pcn_beta**2) * current.m
     
@@ -133,10 +133,8 @@ class MCMC:
         self.proposed.m = self.proposal(current, self.proposed)
         self.proposed.log_posterior = self.logPosterior(self.proposed)
         
-        # accept or reject (based on log-likelihood, i.e., -cost, for preconditioned Crank Nicholson following Stuart 2010 and HippyLib)
-        alpha = current.cost - self.proposed.cost # or -current.log_likelihood + self.proposed.log_likelihood
-        # alpha = self.proposed.log_prior + self.proposed.log_likelihood - current.log_prior - current.log_likelihood
-        
+        # accept or reject based on the likelihood ratio
+        alpha = current.cost - self.proposed.cost
         if alpha > np.log(np.random.uniform()):
             current.set(self.proposed)
             return 1
@@ -291,7 +289,10 @@ class MCMC:
 
         # compare true and posterior mean fields
         pp = self.pp_params['field_plot']
-        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_iter_{}.png'.format(i), params = pp)
+        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_true_F_for_u_iter_{}.png'.format(i), \
+            params = pp, use_surrogate_F_for_u = False)
+        mcmc_plot_fields(self, savefilename = self.tracer.savepath + 'true_and_posterior_mean_w_m_u_surrogate_F_for_u_iter_{}.png'.format(i), \
+            params = pp, use_surrogate_F_for_u = True)
 
     def save(self, i, current, accept):
         # save tracer

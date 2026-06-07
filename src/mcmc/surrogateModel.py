@@ -65,10 +65,11 @@ class SurrogateModelFNO(SurrogateModel):
             interp = RegularGridInterpolator((self.grid_x[:,0], self.grid_y[0,:]), u[:, :, 0])
             return interp(self.nodes)
         else:
+            # FEniCSx vector DOFs are interleaved: [ux0, uy0, ux1, uy1, ...]
             u_interp = np.zeros(self.u_comps*self.num_nodes)
             for i in range(self.u_comps):
                 interp = RegularGridInterpolator((self.grid_x[:,0], self.grid_y[0,:]), u[:, :, i])
-                u_interp[i*self.num_nodes:(i+1)*self.num_nodes] = interp(self.nodes)
+                u_interp[i::self.u_comps] = interp(self.nodes)
             
             return u_interp
                 
