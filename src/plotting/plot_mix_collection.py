@@ -22,7 +22,7 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
     nodes = None, grid_x = None, grid_y = None, nodes_point_plot = None, \
     figsize = (20, 20), fs = 20, sup_title = None, y_sup_title = 1.025, \
     savefilename = None, fig_pad = 1.08, cax_size = '8%', cax_pad = 0.03, \
-    u = None, cmap = None, title = None, \
+    u = None, cmap = None, title = None, row_titles = None, row_title_pad = 0.08, \
     plot_type = None, cbar_fmt = None, \
     axis_off = None, is_vec = None, add_disp = None, vector_layout = None):
 
@@ -44,6 +44,8 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
         cbar_fmt = [[None for _ in range(cols)] for _ in range(rows)]
     if vector_layout is None:
         vector_layout = [['mixed' for _ in range(cols)] for _ in range(rows)]
+    if row_titles is None:
+        row_titles = [None for _ in range(rows)]
 
     return {
         'rows': rows,
@@ -63,6 +65,8 @@ def get_default_plot_mix_collection_data(rows = 1, cols = 1, \
         'u': u,
         'cmap': cmap,
         'title': title,
+        'row_titles': row_titles,
+        'row_title_pad': row_title_pad,
         'axis_off': axis_off,
         'is_vec': is_vec,
         'add_disp': add_disp,
@@ -173,6 +177,25 @@ def plot_mix_collection(data):
                 axs[i,j].set_title(ttl, fontsize=fs)
 
     fig.tight_layout(pad = fig_pad)
+
+    row_titles = data.get('row_titles')
+    if row_titles is not None and any(label is not None for label in row_titles):
+        row_title_pad = data.get('row_title_pad', 0.08)
+        fig.subplots_adjust(left=row_title_pad)
+        for i, label in enumerate(row_titles):
+            if label is None:
+                continue
+            pos = axs[i, 0].get_position()
+            fig.text(
+                pos.x0 * 0.45,
+                (pos.y0 + pos.y1) / 2,
+                label,
+                ha='center',
+                va='center',
+                rotation=90,
+                fontsize=fs,
+            )
+
     if sup_title is not None:
         fig.suptitle(sup_title, fontsize=fs_sup_title, y = y_sup_title)
     if savefilename is not None:

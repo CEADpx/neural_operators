@@ -13,10 +13,6 @@ if str(_pde_path) not in sys.path:
 from fenicsUtilities import build_vector_vertex_maps
 
 
-def _num_dofs(V):
-    return len(fem.Function(V).x.array)
-
-
 class PriorSampler:
 
     def __init__(self, V, a, c, seed=0):
@@ -38,7 +34,7 @@ class PriorSampler:
 
         # Source function
         self.s_fn = fem.Function(self.V)
-        self.s_dim = _num_dofs(self.V)
+        self.s_dim = len(fem.Function(self.V).x.array)
 
         # variational form
         self.u_fn = fem.Function(self.V)

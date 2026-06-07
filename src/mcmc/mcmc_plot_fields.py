@@ -68,21 +68,25 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
     if surrogate_to_use is not None and use_surrogate_F_for_u:
         F_m_sample_str = r'$u_{{sample}} = F_{{{}}}(m_{{sample}})$'.format(surrogate_to_use)
         F_m_mean_str = r'$u_{{mean}} = F_{{{}}}(m_{{mean}})$'.format(surrogate_to_use)
+
+    g_true_str = r'$\mathrm{g}_{true} = \bar{\mathbf{B}}(u_{true})$'
+    g_sample_str = r'$\mathrm{g}_{sample} = \bar{\mathbf{B}}(u_{sample})$'
+    g_mean_str = r'$\mathrm{g}_{mean} = \bar{\mathbf{B}}(u_{mean})$'
         
     title_vec = [ [ r'$w_{true}$', \
                     r'$m_{true} = \alpha_m\, \exp(w_{true}) + \beta_m$', \
                     F_m_true_str, \
-                    r'$u_{obs}$' \
+                    g_true_str \
                     ], \
-                    [ r'$w_{sample} \sim \mu^{{\mathrm{o}}}$', \
+                    [ r'$w_{sample} \sim \mu^{{\mathrm{g}}}$', \
                     r'$m_{sample} = \alpha_m\, \exp(w_{sample}) + \beta_m$', \
                     F_m_sample_str, \
-                    r'$u_{sample, obs}$' \
+                    g_sample_str \
                     ], \
                     [ r'$w_{mean}$', \
                     r'$m_{mean} = \alpha_m\, \exp(w_{mean}) + \beta_m$', \
                     F_m_mean_str, \
-                    r'$u_{mean, obs}$' \
+                    g_mean_str \
                 ]]
 
     # get cmap from params if it exists
@@ -95,7 +99,7 @@ def mcmc_plot_fields_base(w_mean, w_sample, w_sample_i, mcmc, savefilename = Non
                     for i in range(rows)]
     
     sup_title = r'Ground truth, $i^{th}$ sample' \
-            + r', and posterior mean $(w, m, u(m), u_{obs})$' \
+            + fr', and posterior mean $(w, m, u(m), \mathrm{{g}})$' \
             + r', i = {}'.format(w_sample_i)
     
     if params is not None and 'sup_title' in params:

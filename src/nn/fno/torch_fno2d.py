@@ -25,7 +25,7 @@ class FNO2D(nn.Module):
         self.fourier_modes1 = fourier_modes1
         self.fourier_modes2 = fourier_modes2
         
-        # dimension d_o of the pointwise value of the target function (u(x) \in R^d_o)
+        # dimension d_U of the pointwise value of the target function (u(x) \in R^d_U)
         self.num_Y_components = num_Y_components
 
         # create hidden layers (FNO layers)
@@ -39,12 +39,10 @@ class FNO2D(nn.Module):
         # no activation in the last hidden layer
         self.fno_layers[-1].apply_act = False 
 
-        # define input-to-hidden projector
-        # input has 3 components: m(x,y), x_1, x_2
+        # define input-to-hidden projector: input has 3 components: m(x,y), x, y
         self.input_projector = nn.Linear(3, self.width)
 
-        # define hidden-to-output projector 
-        # project to the dimension of u(x) \in R^d_o
+        # define hidden-to-output projector
         self.output_projector = nn.Linear(self.width, self.num_Y_components)
 
         # record losses

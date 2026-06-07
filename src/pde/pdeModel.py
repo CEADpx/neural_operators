@@ -3,11 +3,6 @@ from dolfinx import fem
 
 from fenicsUtilities import build_vector_vertex_maps
 
-
-def _num_dofs(V):
-    return len(fem.Function(V).x.array)
-
-
 class PDEModel:
 
     def __init__(self, Vm, Vu, prior_sampler, seed=0):
@@ -30,8 +25,8 @@ class PDEModel:
         self.Vm_vec2vv, self.Vm_vv2vec = build_vector_vertex_maps(self.Vm)
         self.Vu_vec2vv, self.Vu_vv2vec = build_vector_vertex_maps(self.Vu)
 
-        self.m_dim = _num_dofs(self.Vm)
-        self.u_dim = _num_dofs(self.Vu)
+        self.m_dim = len(fem.Function(self.Vm).x.array)
+        self.u_dim = len(fem.Function(self.Vu).x.array)
 
         # store transformed m where input is from Gaussian prior
         self.m_transformed = None

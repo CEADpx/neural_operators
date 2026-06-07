@@ -38,7 +38,7 @@ class FNO2DLayer(nn.Module):
         # compute Fourier coeffcients
         x_ft = torch.fft.rfft2(x)
 
-        # Multiply relevant Fourier modes
+        # multiply retained Fourier modes
         out_ft = torch.zeros(batchsize, self.out_channels,  x.size(-2), x.size(-1)//2 + 1, device=x.device, dtype=torch.cfloat)
         out_ft[:, :, :self.modes1, :self.modes2] = \
             self.compl_mul2d(x_ft[:, :, :self.modes1, :self.modes2], self.weights1)

@@ -98,6 +98,7 @@ class MCMC:
     def state_to_obs(self, u):
         if self.u_comps == 1:
             return griddata(self.u_nodes, u, self.x_obs, method='linear')
+        
         num_nodes = self.u_nodes.shape[0]
         u_xy = u.reshape(num_nodes, self.u_comps)
         obs_components = [
@@ -124,7 +125,6 @@ class MCMC:
     
     def proposal(self, current, proposed):
         # preconditioned Crank-Nicolson
-        # self.prior.get() returns the new sample
         proposed.m, proposed.log_prior = self.prior(proposed.m)
         return self.pcn_beta * proposed.m + np.sqrt(1 - self.pcn_beta**2) * current.m
     
@@ -133,10 +133,8 @@ class MCMC:
         self.proposed.m = self.proposal(current, self.proposed)
         self.proposed.log_posterior = self.logPosterior(self.proposed)
         
-        # accept or reject (based on log-likelihood, i.e., -cost, for preconditioned Crank Nicholson following Stuart 2010 and HippyLib)
-        alpha = current.cost - self.proposed.cost # or -current.log_likelihood + self.proposed.log_likelihood
-        # alpha = self.proposed.log_prior + self.proposed.log_likelihood - current.log_prior - current.log_likelihood
-        
+        # accept or reject based on the likelihood ratio
+        alpha = current.cost - self.proposed.cost
         if alpha > np.log(np.random.uniform()):
             current.set(self.proposed)
             return 1
