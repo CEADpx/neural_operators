@@ -39,20 +39,24 @@ class HyperelasticityModel(PDEModel):
         self.logn_scale = logn_scale
         self.logn_translate = logn_translate
         self.nu = 0.45
+        self.lam_fact = self.nu / ((1 + self.nu) * (1 - 2 * self.nu))
+        self.mu_fact = 1.0 / (2 * (1 + self.nu))
+
+        # Newton solver parameters
         self.newton_rtol = 1e-8
         self.newton_atol = 1e-8
         self.newton_max_it = 50
         self.reset_u = True
         self.n_load_steps = 20
 
-        domain = self.mesh
         qd = {"quadrature_degree": 4}
-        dx = ufl.Measure("dx", domain=domain, metadata=qd)
-        ds = ufl.Measure("ds", domain=domain, metadata=qd)
+        dx = ufl.Measure("dx", domain=self.mesh, metadata=qd)
+        ds = ufl.Measure("ds", domain=self.mesh, metadata=qd)
 
+        # External body force and boundary traction
         self.b = ufl.as_vector((0.0, 0.0))
-        self._traction_x = fem.Constant(domain, default_scalar_type(20.0))
-        self._traction_y = fem.Constant(domain, default_scalar_type(50.0))
+        self._traction_x = fem.Constant(self.mesh, default_scalar_type(20.0))
+        self._traction_y = fem.Constant(self.mesh, default_scalar_type(50.0))
         self.t = ufl.as_vector((self._traction_x, self._traction_y))
 
         dofs = fem.locate_dofs_geometrical(Vu, self._dirichlet_boundary)
@@ -68,15 +72,16 @@ class HyperelasticityModel(PDEModel):
         self.u_fn = fem.Function(self.Vu)
         self.u_test = ufl.TestFunction(self.Vu)
 
-        spatial_dim = domain.geometry.dim
+        # variational form
+        spatial_dim = self.mesh.geometry.dim
         I = ufl.variable(ufl.Identity(spatial_dim))
         F = ufl.variable(I + ufl.grad(self.u_fn))
         C = ufl.variable(F.T * F)
         Ic = ufl.variable(ufl.tr(C))
         J = ufl.variable(ufl.det(F))
 
-        mu = self.m_fn / (2.0 * (1.0 + self.nu))
-        lam = self.m_fn * self.nu / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu))
+        mu = self.m_fn * self.mu_fact
+        lam = self.m_fn * self.lam_fact
         # Stable compressible Neo-Hookean
         W = (mu / 2.0) * (Ic - 3.0 - 2.0 * ufl.ln(J)) + (lam / 2.0) * (ufl.ln(J)) ** 2
         P = ufl.diff(W, F)
