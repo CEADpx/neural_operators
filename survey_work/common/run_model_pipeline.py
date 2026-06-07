@@ -3,8 +3,8 @@
 
 Run from survey_work/ or survey_work/common/:
 
-  python common/run_model_pipeline.py poisson
-  python common/run_model_pipeline.py linear_elasticity
+  python run_model_pipeline.py poisson --skip-training
+  python run_model_pipeline.py linear_elasticity --skip-training
 """
 import argparse
 import os
@@ -21,11 +21,11 @@ SURVEY_WORK_DIR = Path(__file__).resolve().parent.parent
 MODELS = {
     "poisson": {
         "problem_dir": "problems/poisson",
-        "bayes_dir": "applications/bayesian_inverse_problem_poisson",
+        "bayes_dir": "applications/bayesian_inverse_problem_poisson_ood",
     },
     "linear_elasticity": {
         "problem_dir": "problems/linear_elasticity",
-        "bayes_dir": "applications/bayesian_inverse_problem_linear_elasticity",
+        "bayes_dir": "applications/bayesian_inverse_problem_linear_elasticity_ood",
     },
     "hyperelasticity": {
         "problem_dir": "problems/hyperelasticity",

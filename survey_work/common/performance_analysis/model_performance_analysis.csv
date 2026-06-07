@@ -1,13 +1,13 @@
-Model,Problem,NumParams,IDErr,OODErr,BayesErr
-True,Poisson,,,,29.5
-DeepONet,Poisson,188040,1.3,172.0,39.7
-PCANet,Poisson,180700,0.9,184.5,43.4
-FNO,Poisson,187485,0.6,124.2,37.6
-True,LinearElasticity,,,,29.5
-DeepONet,LinearElasticity,194540,1.3,172.0,39.7
-PCANet,LinearElasticity,180700,0.9,184.5,43.4
-FNO,LinearElasticity,187485,0.6,124.2,37.6
-True,Hyperelasticity,,,,29.5
-DeepONet,Hyperelasticity,194540,1.3,172.0,39.7
-PCANet,Hyperelasticity,180700,0.9,184.5,43.4
-FNO,Hyperelasticity,187485,0.6,124.2,37.6
+Model,Problem,NumParams,IDErr,OODErr1, OODErr2, BayesErr
+TRUE,Poisson,,,,,29.51
+DeepONet,Poisson,188040,1.319,31.814,186.6,39.7
+PCANet,Poisson,180700,0.884,34.111,202.861,43.42
+FNO,Poisson,187485,0.575,13.512,136.091,37.56
+TRUE,LinearElasticity,,,,,21.11
+DeepONet,LinearElasticity,194540,0.034,18.064,66.778,21.57
+PCANet,LinearElasticity,180700,0.008,17.551,65.929,23.75
+FNO,LinearElasticity,187508,0.028,24.9,96.265,22.22
+TRUE,Hyperelasticity,,,,,19.7
+DeepONet,Hyperelasticity,194540,0.032,14.007,52.654,21.91
+PCANet,Hyperelasticity,180700,0.007,14.118,52.973,21.48
+FNO,Hyperelasticity,187508,0.027,13.238,69.212,21.42
