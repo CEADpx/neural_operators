@@ -29,29 +29,34 @@ class PoissonModel(PDEModel):
         seed=0,
     ):
         super().__init__(Vm, Vu, prior_sampler, seed)
-
+        
+        # prior transform parameters
         self.logn_scale = logn_scale
         self.logn_translate = logn_translate
 
-        domain = self.mesh
-        x = ufl.SpatialCoordinate(domain)
+        x = ufl.SpatialCoordinate(self.mesh)
         qd = {"quadrature_degree": 4}
-        dx = ufl.Measure("dx", domain=domain, metadata=qd)
-        ds = ufl.Measure("ds", domain=domain, metadata=qd)
+        dx = ufl.Measure("dx", domain=self.mesh, metadata=qd)
+        ds = ufl.Measure("ds", domain=self.mesh, metadata=qd)
+
+        # External heat source and boundary flux
         self.f_expr = 1000 * (1 - x[1]) * x[1] * (1 - x[0]) * (1 - x[0])
         self.q_expr = 50 * ufl.sin(5 * ufl.pi * x[1])
 
+        # store transformed m where input is from Gaussian prior
         self.m_mean = self.compute_mean(self.m_mean)
 
+        # input and output functions (will be updated in solveFwd)
+        self.u_fn = fem.Function(self.Vu)
         self.m_fn = fem.Function(self.Vm)
         self.vertex_to_function(self.m_mean, self.m_fn, is_m=True)
         self._update_ghosts(self.m_fn)
 
-        self.u_fn = fem.Function(self.Vu)
-
+        # trial and test functions
         self.u_trial = ufl.TrialFunction(self.Vu)
         self.u_test = ufl.TestFunction(self.Vu)
-
+        
+        # variational form
         self.a_form = (
             self.m_fn
             * ufl.inner(ufl.grad(self.u_trial), ufl.grad(self.u_test))
@@ -59,11 +64,13 @@ class PoissonModel(PDEModel):
         )
         self.L_form = self.f_expr * self.u_test * dx + self.q_expr * self.u_test * ds
 
-        fdim = domain.topology.dim - 1
-        domain.topology.create_connectivity(fdim, domain.topology.dim)
+        # Dirichlet boundary condition
+        fdim = self.mesh.topology.dim - 1
+        self.mesh.topology.create_connectivity(fdim, self.mesh.topology.dim)
         dofs = fem.locate_dofs_geometrical(self.Vu, self._dirichlet_boundary)
         self.bc = [fem.dirichletbc(default_scalar_type(0.0), dofs, self.Vu)]
 
+        # assemble matrix and vector
         self._a_compiled = None
         self._L_compiled = None
         self._ksp = None
@@ -154,8 +161,10 @@ class PoissonModel(PDEModel):
         self.vertex_to_function(self.m_transformed, self.m_fn, is_m=True)
         self._update_ghosts(self.m_fn)
 
+        # reassemble
         self.assemble(assemble_lhs=True, assemble_rhs=False)
 
+        # solve
         self.u_fn.x.petsc_vec.set(0.0)
         self._setup_solver()
         self._ksp.solve(self.rhs, self.u_fn.x.petsc_vec)
