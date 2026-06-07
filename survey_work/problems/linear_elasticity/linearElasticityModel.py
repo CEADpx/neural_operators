@@ -33,21 +33,24 @@ class LinearElasticityModel(PDEModel):
         self.logn_scale = logn_scale
         self.logn_translate = logn_translate
         self.nu = 0.45
+        self.lam_fact = self.nu / ((1 + self.nu) * (1 - 2 * self.nu))
+        self.mu_fact = 1.0 / (2 * (1 + self.nu))
 
         domain = self.mesh
         qd = {"quadrature_degree": 4}
-        dx = ufl.Measure("dx", domain=domain, metadata=qd)
+        dx = ufl.Measure("dx", domain=self.mesh, metadata=qd)
 
-        fdim = domain.topology.dim - 1
-        domain.topology.create_connectivity(fdim, domain.topology.dim)
+        fdim = self.mesh.topology.dim - 1
+        self.mesh.topology.create_connectivity(fdim, self.mesh.topology.dim)
 
         # Legacy FEniCS used Measure("ds") without a subdomain index (traction on
         # the full exterior boundary), not ds(1) on the marked right edge only.
-        ds = ufl.Measure("ds", domain=domain, metadata=qd)
+        ds = ufl.Measure("ds", domain=self.mesh, metadata=qd)
 
+        # External body force and boundary traction
         self.b = ufl.as_vector((0.0, 0.0))
-        self._traction_x = fem.Constant(domain, default_scalar_type(20.0))
-        self._traction_y = fem.Constant(domain, default_scalar_type(50.0))
+        self._traction_x = fem.Constant(self.mesh, default_scalar_type(20.0))
+        self._traction_y = fem.Constant(self.mesh, default_scalar_type(50.0))
         self.t = ufl.as_vector((self._traction_x, self._traction_y))
 
         dofs = fem.locate_dofs_geometrical(Vu, self._dirichlet_boundary)
@@ -65,23 +68,13 @@ class LinearElasticityModel(PDEModel):
         self.u_trial = ufl.TrialFunction(self.Vu)
         self.u_test = ufl.TestFunction(self.Vu)
 
-        self.lam_fact = self.nu / ((1 + self.nu) * (1 - 2 * self.nu))
-        self.mu_fact = 1.0 / (2 * (1 + self.nu))
-
-        spatial_dim = domain.geometry.dim
+        # variational form
+        spatial_dim = self.mesh.geometry.dim
         I = ufl.Identity(spatial_dim)
-        self.a_form = (
-            self.m_fn
-            * ufl.inner(
-                self.lam_fact * ufl.tr(ufl.grad(self.u_trial)) * I
-                + 2 * self.mu_fact * ufl.sym(ufl.grad(self.u_trial)),
-                ufl.sym(ufl.grad(self.u_test)),
-            )
-            * dx
-        )
-        self.L_form = ufl.inner(self.b, self.u_test) * dx + ufl.inner(
-            self.t, self.u_test
-        ) * ds
+        sigma = self.lam_fact * ufl.tr(ufl.grad(self.u_trial)) * I \
+                + 2 * self.mu_fact * ufl.sym(ufl.grad(self.u_trial))
+        self.a_form = self.m_fn * ufl.inner(sigma,ufl.sym(ufl.grad(self.u_test))) * dx
+        self.L_form = ufl.inner(self.b, self.u_test) * dx + ufl.inner(self.t, self.u_test) * ds
 
         self._a_compiled = None
         self._L_compiled = None
