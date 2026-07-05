@@ -78,6 +78,6 @@ Early comparisons with publicly shared DeepONet/FNO implementations; see [README
 
 **Article:** Jha, P. K. (2025). *From Theory to Application: A Practical Introduction to Neural Operators in Scientific Computing.* arXiv:2503.05598 — https://arxiv.org/abs/2503.05598
 
-**Code:** Jha, P. K. (2025). CEADpx: neural_operators (survey25_v1). Zenodo — https://doi.org/10.5281/zenodo.15014505
+**Code:** Jha, P. K. (2026). CEADpx: neural_operators (survey26_v2). Zenodo — https://doi.org/10.5281/zenodo.21197314
 
-Article-aligned repository snapshot: Git tag `survey26_v2`.
+The snapshot of code used to prepare results for article: Git tag `survey26_v2`.
