@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{array}
+\renewcommand{\arraystretch}{1.2}
+\begin{document}
+
+\begin{center}
+\vspace*{1em}
+{\large\bfseries Performance table\par}
+\vspace{0.75em}
+\begin{tabular}{| @{\hspace{0.4em}} >{\raggedright\arraybackslash}p{4.2cm} @{\hspace{1em}}|@{\hspace{1em}}>{\centering\arraybackslash}p{2.4cm} @{\hspace{1em}}|@{\hspace{1em}}>{\centering\arraybackslash}p{2.4cm} @{\hspace{1em}}|@{\hspace{1em}}>{\centering\arraybackslash}p{2.4cm} @{\hspace{0.4em}} |}
+\hline
+\textbf{Metric} & Poisson & Linear Elasticity & Hyperelasticity \\
+\hline
+\multicolumn{4}{|c|}{\textbf{True}} \\
+\hline
+Bayesian inference error & 29.5\% & 21.1\% & 19.7\% \\
+\hline
+\hline
+\multicolumn{4}{|c|}{\textbf{DeepONet}} \\
+\hline
+Trainable Params $p_{\Theta}$ & 188{,}040 & 194{,}540 & 194{,}540 \\
+\cline{1-4}
+In-distribution error & 1.319\% & 0.034\% & 0.032\% \\
+\cline{1-4}
+Out-of-distribution error (Case 1) & 31.814\% & 18.064\% & 14.007\% \\
+\cline{1-4}
+Out-of-distribution error (Case 2) & 186.6\% & 66.778\% & 52.654\% \\
+\cline{1-4}
+Bayesian inference error & 39.7\% & 21.6\% & 21.9\% \\
+\hline
+\hline
+\multicolumn{4}{|c|}{\textbf{PCANet}} \\
+\hline
+Trainable Params $p_{\Theta}$ & 180{,}700 & 180{,}700 & 180{,}700 \\
+\cline{1-4}
+In-distribution error & 0.884\% & 0.008\% & 0.007\% \\
+\cline{1-4}
+Out-of-distribution error (Case 1) & 34.111\% & 17.551\% & 14.118\% \\
+\cline{1-4}
+Out-of-distribution error (Case 2) & 202.861\% & 65.929\% & 52.973\% \\
+\cline{1-4}
+Bayesian inference error & 43.4\% & 23.8\% & 21.5\% \\
+\hline
+\hline
+\multicolumn{4}{|c|}{\textbf{FNO}} \\
+\hline
+Trainable Params $p_{\Theta}$ & 187{,}485 & 187{,}508 & 187{,}508 \\
+\cline{1-4}
+In-distribution error & 0.575\% & 0.028\% & 0.027\% \\
+\cline{1-4}
+Out-of-distribution error (Case 1) & 13.512\% & 24.9\% & 13.238\% \\
+\cline{1-4}
+Out-of-distribution error (Case 2) & 136.091\% & 96.265\% & 69.212\% \\
+\cline{1-4}
+Bayesian inference error & 37.6\% & 22.2\% & 21.4\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}

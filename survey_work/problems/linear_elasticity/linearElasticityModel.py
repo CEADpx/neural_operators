@@ -43,8 +43,6 @@ class LinearElasticityModel(PDEModel):
         fdim = self.mesh.topology.dim - 1
         self.mesh.topology.create_connectivity(fdim, self.mesh.topology.dim)
 
-        # Legacy FEniCS used Measure("ds") without a subdomain index (traction on
-        # the full exterior boundary), not ds(1) on the marked right edge only.
         ds = ufl.Measure("ds", domain=self.mesh, metadata=qd)
 
         # External body force and boundary traction
@@ -85,18 +83,6 @@ class LinearElasticityModel(PDEModel):
     @staticmethod
     def _dirichlet_boundary(x):
         return np.isclose(x[0], 0.0, atol=1e-10)
-
-    @staticmethod
-    def _traction_boundary(x):
-        return np.isclose(x[0], 1.0, atol=1e-10)
-
-    @staticmethod
-    def boundaryU(x, on_boundary):
-        return on_boundary and x[0] < 1e-10
-
-    @staticmethod
-    def boundaryQ(x, on_boundary):
-        return on_boundary and abs(x[0] - 1.0) < 1e-10
 
     @staticmethod
     def is_point_on_dirichlet_boundary(x):

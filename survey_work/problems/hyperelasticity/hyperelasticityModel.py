@@ -18,8 +18,8 @@ class HyperelasticityModel(PDEModel):
     2D compressible hyperelasticity on the unit square (Neo-Hookean energy).
 
     Same setup as ``LinearElasticityModel``: uncertain scalar Young's modulus
-    field ``m(x)``, left-edge Dirichlet clamp ``u = 0``, body force zero, and
-    uniform traction on the exterior boundary. Strain energy is the stable
+    field ``m(x)``, left-edge Dirichlet clamp ``u = 0`` on ``Γ_{u_d}``, body force zero,
+    and uniform traction on ``Γ_{u_q} = ∂D_u \\ Γ_{u_d}``. Strain energy is the stable
     compressible Neo-Hookean form ``(μ/2)(I₁ - 3 - 2 ln J) + (λ/2)(ln J)²``.
     Uses a Newton solve each forward evaluation. When ``reset_u`` is True,
     traction is ramped in ``n_load_steps`` increments for robust convergence.
@@ -98,14 +98,6 @@ class HyperelasticityModel(PDEModel):
     @staticmethod
     def _dirichlet_boundary(x):
         return np.isclose(x[0], 0.0, atol=1e-10)
-
-    @staticmethod
-    def boundaryU(x, on_boundary):
-        return on_boundary and x[0] < 1e-10
-
-    @staticmethod
-    def boundaryQ(x, on_boundary):
-        return on_boundary and abs(x[0] - 1.0) < 1e-10
 
     @staticmethod
     def is_point_on_dirichlet_boundary(x):
